@@ -146,11 +146,19 @@ if file_soa and file_sor:
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         result.to_excel(writer, index=False, sheet_name='Result')
 
+    # gunakan nama dari user
+    final_filename = file_name_input.strip()
+    
+    # fallback kalau kosong
+    if final_filename == "":
+        final_filename = "SOA_Result"
+    
     st.download_button(
         label="⬇️ Download Hasil Excel",
         data=output.getvalue(),
-        file_name="SOA_Result.xlsx",
+        file_name=f"{final_filename}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
     )
 
 else:
