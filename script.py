@@ -6,7 +6,7 @@ st.sidebar.title("📌 Menu")
 
 mode = st.sidebar.radio(
     "Pilih Analisis",
-    ["Gearing Ratio (SOA Processing)", "Outstanding Penjaminan (SOA Report)"]
+    ["Spreading Data (SOA Processing)", "Laporan SOA (SOA Report)"]
 )
 
 st.set_page_config(page_title="SOA Processing", layout="wide")
