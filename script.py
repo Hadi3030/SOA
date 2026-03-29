@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
 import io
+from PIL import Image
 
 st.set_page_config(page_title="SOA Processing", layout="wide")
+
+# ===============================
+# LOAD LOGO
+# ===============================
+logo_path = "askrindo.jpg"
 
 # ===============================
 # SIDEBAR MENU
@@ -49,7 +55,6 @@ def process_data(df1, df2):
 
     df1['UY-COB'] = df1['UY'].astype(str) + "-" + df1['COB']
 
-    # FIX PERSEN
     def percent_to_decimal(x):
         if pd.isna(x):
             return 0
@@ -76,9 +81,6 @@ def process_data(df1, df2):
         how='left'
     )
 
-    # ===============================
-    # SPREAD 2023
-    # ===============================
     found = merged[merged['BROKER'].notna()].copy()
     missing = merged[merged['BROKER'].isna()].copy()
 
@@ -123,7 +125,6 @@ def generate_report(df):
 
     df = standardize_columns(df)
 
-    # FIX KOLOM WAJIB
     if 'CURRENCY' not in df.columns:
         df['CURRENCY'] = 'IDR'
 
@@ -166,6 +167,29 @@ def generate_report(df):
 
     return pd.DataFrame(final_rows,
         columns=['Currency','COB','UY','Premium','Commission','Claim','Amount'])
+
+# ===============================
+# FUNCTION HEADER EXCEL
+# ===============================
+def write_header_excel(writer, sheet_name, ref_no, treaty_year, quarter, for_months, remarks):
+    workbook = writer.book
+    worksheet = writer.sheets[sheet_name]
+
+    # Logo kiri atas
+    worksheet.insert_image('A1', logo_path, {'x_scale': 0.5, 'y_scale': 0.5})
+
+    bold = workbook.add_format({'bold': True, 'align': 'center'})
+    normal = workbook.add_format({'font_size': 10})
+
+    # Judul kanan
+    worksheet.merge_range('D2:H2', 'STATEMENT OF ACCOUNT', bold)
+    worksheet.merge_range('D3:H3', f"Ref No. {ref_no}", normal)
+
+    # Info kiri
+    worksheet.write('A5', f"Treaty Year : {treaty_year}")
+    worksheet.write('A6', f"Quarter : {quarter}")
+    worksheet.write('A7', f"For Months : {for_months}")
+    worksheet.write('A8', f"Remarks : {remarks}")
 
 # ===============================
 # MODE 1
@@ -213,6 +237,19 @@ else:
 
     st.title("📑 SOA Report")
 
+    st.markdown("### 🧾 Informasi Header")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        ref_no = st.text_input("Ref No", "....../DUWR/..../20..")
+        treaty_year = st.text_input("Treaty Year", "2026")
+        quarter = st.text_input("Quarter", "IV Quota Share")
+
+    with col2:
+        for_months = st.text_input("For Months", "Oct - Dec 2025")
+        remarks = st.text_input("Remarks", "-")
+
     source = st.radio(
         "Sumber Data",
         ["Gunakan hasil sebelumnya", "Upload ulang"]
@@ -240,7 +277,19 @@ else:
     name = st.text_input("Nama file report", "SOA_Report")
 
     output = io.BytesIO()
-    report.to_excel(output, index=False)
+
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        report.to_excel(writer, index=False, startrow=10, sheet_name='Report')
+
+        write_header_excel(
+            writer,
+            'Report',
+            ref_no,
+            treaty_year,
+            quarter,
+            for_months,
+            remarks
+        )
 
     st.download_button("Download Report",
         data=output.getvalue(),
