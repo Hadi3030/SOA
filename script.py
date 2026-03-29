@@ -247,8 +247,48 @@ elif mode == "Laporan SOA (SOA Report)":
     file_name_input = st.text_input("Nama file report", value="SOA_Report")
 
     output = io.BytesIO()
+    from openpyxl.styles import Font, Alignment
+    from openpyxl.utils import get_column_letter
+    
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        report.to_excel(writer, index=False)
+        report.to_excel(writer, index=False, sheet_name='SOA Report')
+    
+        workbook = writer.book
+        worksheet = writer.sheets['SOA Report']
+    
+        # ===============================
+        # FORMAT HEADER
+        # ===============================
+        for cell in worksheet[1]:
+            cell.font = Font(bold=True)
+    
+        # ===============================
+        # FORMAT KOLOM ANGKA
+        # ===============================
+        number_format = '#,##0.00;[Red](#,##0.00)'
+    
+        cols_to_format = ['D','E','F','G']  # Premium, Commission, Claim, Amount
+    
+        for col in cols_to_format:
+            for row in range(2, worksheet.max_row + 1):
+                cell = worksheet[f"{col}{row}"]
+                cell.number_format = number_format
+    
+        # ===============================
+        # AUTO WIDTH
+        # ===============================
+        for col in worksheet.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+    
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+    
+            worksheet.column_dimensions[col_letter].width = max_length + 2
 
     final_filename = file_name_input.strip() or "SOA_Report"
 
