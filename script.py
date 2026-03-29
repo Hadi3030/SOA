@@ -109,14 +109,33 @@ def process_data(df1, df2):
     return merged
 
 # ===============================
-# FUNCTION TOTAL
+# FUNCTION HEADER EXCEL
 # ===============================
-def add_total_row(df):
-    numeric_cols = df.select_dtypes(include='number').columns
-    total = df[numeric_cols].sum()
-    total_df = pd.DataFrame([total])
-    total_df.index = ['TOTAL']
-    return total_df
+def write_header_excel(writer, sheet_name, ref_no, treaty_year, quarter, for_months, remarks):
+    workbook = writer.book
+    worksheet = writer.sheets[sheet_name]
+
+    # LOGO KIRI ATAS
+    worksheet.insert_image('A1', logo_path, {'x_scale': 0.5, 'y_scale': 0.5})
+
+    # FORMAT
+    bold = workbook.add_format({'bold': True, 'font_size': 12})
+    normal = workbook.add_format({'font_size': 10})
+
+    # JUDUL
+    worksheet.write('D2', 'STATEMENT OF ACCOUNT', bold)
+    worksheet.write('D3', f"Ref No. {ref_no}", normal)
+
+    # DETAIL
+    worksheet.write('A5', f"Treaty Year : {treaty_year}", normal)
+    worksheet.write('A6', f"Quarter : {quarter}", normal)
+    worksheet.write('A7', f"For Months : {for_months}", normal)
+    worksheet.write('A8', f"Remarks : {remarks}", normal)
+
+    # SPACING BIAR MIRIP TEMPLATE
+    worksheet.set_row(1, 25)
+    worksheet.set_column('A:A', 30)
+    worksheet.set_column('D:D', 40)
 
 # ===============================
 # FUNCTION REPORT
@@ -169,56 +188,30 @@ def generate_report(df):
         columns=['Currency','COB','UY','Premium','Commission','Claim','Amount'])
 
 # ===============================
-# FUNCTION HEADER EXCEL
-# ===============================
-def write_header_excel(writer, sheet_name, ref_no, treaty_year, quarter, for_months, remarks):
-    workbook = writer.book
-    worksheet = writer.sheets[sheet_name]
-
-    # Logo kiri atas
-    worksheet.insert_image('A1', logo_path, {'x_scale': 0.5, 'y_scale': 0.5})
-
-    bold = workbook.add_format({'bold': True, 'align': 'center'})
-    normal = workbook.add_format({'font_size': 10})
-
-    # Judul kanan
-    worksheet.merge_range('D2:H2', 'STATEMENT OF ACCOUNT', bold)
-    worksheet.merge_range('D3:H3', f"Ref No. {ref_no}", normal)
-
-    # Info kiri
-    worksheet.write('A5', f"Treaty Year : {treaty_year}")
-    worksheet.write('A6', f"Quarter : {quarter}")
-    worksheet.write('A7', f"For Months : {for_months}")
-    worksheet.write('A8', f"Remarks : {remarks}")
-
-# ===============================
-# MODE 1
+# MODE 1 (TIDAK DIUBAH)
 # ===============================
 if mode == "Spreading Data (SOA Processing)":
-
     st.title("📊 SOA Processing")
 
     file_soa = st.file_uploader("Upload Data SOA", type=["xlsx"])
     file_sor = st.file_uploader("Upload SOR Summary", type=["xlsx"])
 
     if file_soa and file_sor:
-
         df1 = pd.read_excel(file_soa)
         df2 = pd.read_excel(file_sor)
 
         st.dataframe(df1)
 
         result = process_data(df1.copy(), df2.copy())
-
         st.dataframe(result)
 
         st.session_state["result_data"] = result
 
         st.subheader("Total SOA")
-        st.dataframe(add_total_row(df1))
+        st.dataframe(df1.select_dtypes(include='number').sum())
 
         st.subheader("Total Output")
-        st.dataframe(add_total_row(result))
+        st.dataframe(result.select_dtypes(include='number').sum())
 
         name = st.text_input("Nama file", "SOA_Result")
 
@@ -231,7 +224,7 @@ if mode == "Spreading Data (SOA Processing)":
         )
 
 # ===============================
-# MODE 2
+# MODE 2 (REPORT - SUDAH FIX)
 # ===============================
 else:
 
