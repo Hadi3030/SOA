@@ -139,6 +139,10 @@ if file_soa and file_sor:
     total_result = add_total_row(result)
     st.dataframe(total_result, use_container_width=True)
 
+    file_name_input = st.text_input(
+    "📝 Masukkan nama file output (tanpa .xlsx)",
+    value="SOA_Result")
+    
     # ===============================
     # DOWNLOAD EXCEL
     # ===============================
