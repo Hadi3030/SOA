@@ -158,7 +158,6 @@ if file_soa and file_sor:
         data=output.getvalue(),
         file_name=f"{final_filename}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
     )
 
 else:
