@@ -2,6 +2,13 @@ import streamlit as st
 import pandas as pd
 import io
 
+st.sidebar.title("📌 Menu")
+
+mode = st.sidebar.radio(
+    "Pilih Analisis",
+    ["Gearing Ratio (SOA Processing)", "Outstanding Penjaminan (SOA Report)"]
+)
+
 st.set_page_config(page_title="SOA Processing", layout="wide")
 
 st.title("📊 SOA Processing Tool")
