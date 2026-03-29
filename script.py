@@ -100,14 +100,27 @@ def process_data(df1, df2):
 # ===============================
 # MAIN PROCESS
 # ===============================
+
+def add_total_row(df):
+    numeric_cols = df.select_dtypes(include='number').columns
+    total = df[numeric_cols].sum()
+    
+    total_df = pd.DataFrame([total])
+    total_df.index = ['TOTAL']
+    
+    return total_df
+
+#============================================
 if file_soa and file_sor:
 
     df1 = pd.read_excel(file_soa)
     df2 = pd.read_excel(file_sor)
-
+    
+    #=====SOA
     st.subheader("📄 Data SOA (Original)")
     st.dataframe(df1, use_container_width=True)
-
+    
+    #======SOR
     st.subheader("📄 Data SOR (Original)")
     st.dataframe(df2, use_container_width=True)
 
@@ -116,6 +129,15 @@ if file_soa and file_sor:
 
     st.subheader("✅ Hasil Setelah Proses")
     st.dataframe(result, use_container_width=True)
+
+    #===TOTAL================
+    st.subheader("🔢 Total Data SOA")
+    total_soa = add_total_row(df1)
+    st.dataframe(total_soa, use_container_width=True)
+    
+    st.subheader("🔢 Total Hasil Output")
+    total_result = add_total_row(result)
+    st.dataframe(total_result, use_container_width=True)
 
     # ===============================
     # DOWNLOAD EXCEL
