@@ -61,8 +61,7 @@ def process_data(df1, df2):
     df2['komisiqs'] = df2['komisiqs'].apply(percent_to_decimal)
     df2['komisisp'] = df2['komisisp'].apply(percent_to_decimal)
 
-    # ❌ CASHCALL DIHAPUS TOTAL
-
+    # MERGE
     merged = df1.merge(
         df2,
         left_on=['UY','COB'],
@@ -70,6 +69,7 @@ def process_data(df1, df2):
         how='left'
     )
 
+    # SPREAD 2023
     found = merged[merged['broker'].notna()].copy()
     missing = merged[merged['broker'].isna()].copy()
 
@@ -96,6 +96,10 @@ def process_data(df1, df2):
     merged['sp_ceding'] = merged['SPL'] * merged['sharere']
     merged['komisi_sp'] = merged['sp_ceding'] * merged['komisisp']
 
+    # ✅ FIX DUPLICATE COLUMN (PENTING BANGET)
+    merged = merged.loc[:, ~merged.columns.duplicated()]
+
+    # ✅ RAPIIKAN KOLOM
     merged.columns = merged.columns.str.strip().str.upper()
 
     return merged
@@ -225,7 +229,6 @@ elif mode == "Laporan SOA (SOA Report)":
     st.subheader("Report SOA")
     st.dataframe(report)
 
-    # INPUT HEADER
     st.subheader("📝 Informasi Laporan")
     ref_no = st.text_input("Ref No", value="")
     treaty_year = st.text_input("Treaty Year", value="2026")
@@ -247,7 +250,6 @@ elif mode == "Laporan SOA (SOA Report)":
 
         ws = writer.sheets['SOA Report']
 
-        # LOGO
         try:
             logo = Image("askrindo.jpg")
             logo.width = 120
@@ -256,7 +258,6 @@ elif mode == "Laporan SOA (SOA Report)":
         except:
             pass
 
-        # TITLE
         ws.merge_cells('A2:G2')
         ws['A2'] = "STATEMENT OF ACCOUNT"
         ws['A2'].font = Font(bold=True, size=14)
@@ -266,19 +267,16 @@ elif mode == "Laporan SOA (SOA Report)":
         ws['A3'] = f"Ref No. {ref_no}"
         ws['A3'].alignment = Alignment(horizontal='center')
 
-        # INFO
         ws['A5'] = f"Treaty Year : {treaty_year}"
         ws['A6'] = f"Quarter     : {quarter}"
         ws['A7'] = f"For Months  : {months}"
         ws['A8'] = f"Remarks     : {remarks}"
 
-        # FORMAT ANGKA
         number_format = '#,##0.00;[Red](#,##0.00)'
         for col in ['D','E','F','G']:
             for row in range(10, ws.max_row + 1):
                 ws[f"{col}{row}"].number_format = number_format
 
-        # AUTO WIDTH
         for col in ws.columns:
             max_length = 0
             col_letter = get_column_letter(col[0].column)
@@ -294,6 +292,8 @@ elif mode == "Laporan SOA (SOA Report)":
         data=output.getvalue(),
         file_name=f"{final_filename}.xlsx"
     )
+
+
 # import streamlit as st
 # import pandas as pd
 # import io
