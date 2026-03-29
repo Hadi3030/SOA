@@ -163,7 +163,7 @@ def generate_report(df):
         final_rows.append([f"{curr} TOTAL","","", *total_curr])
 
     return pd.DataFrame(final_rows,
-        columns=['Currency','COB','UY','Premium','Commission','Claim','Amount'])
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
 
 # ===============================
 # MODE 1
