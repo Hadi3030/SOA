@@ -244,35 +244,80 @@ elif mode == "Laporan SOA (SOA Report)":
     st.subheader("Report SOA")
     st.dataframe(report)
 
-    file_name_input = st.text_input("Nama file report", value="SOA_Report")
+    st.subheader("📝 Informasi Laporan")
 
-    output = io.BytesIO()
+    ref_no = st.text_input("Ref No", value="")
+    treaty_year = st.text_input("Treaty Year", value="2026")
+    quarter = st.text_input("Quarter", value="Q1")
+    months = st.text_input("For Months", value="Jan - Mar")
+    remarks = st.text_input("Remarks", value="-")
+    
+    file_name_input = st.text_input("Nama file report", value="SOA_Report")
+    
+#===============EXPLOR
     from openpyxl.styles import Font, Alignment
+    from openpyxl.drawing.image import Image
     from openpyxl.utils import get_column_letter
     
+    output = io.BytesIO()
+    
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        report.to_excel(writer, index=False, sheet_name='SOA Report')
+        
+        sheet_name = 'SOA Report'
+        report.to_excel(writer, index=False, sheet_name=sheet_name, startrow=8)
     
         workbook = writer.book
-        worksheet = writer.sheets['SOA Report']
+        worksheet = writer.sheets[sheet_name]
     
         # ===============================
-        # FORMAT HEADER
+        # INSERT LOGO
         # ===============================
-        for cell in worksheet[1]:
+        try:
+            logo = Image("askrindo.jpg")
+            logo.width = 120
+            logo.height = 60
+            worksheet.add_image(logo, "A1")
+        except:
+            pass  # kalau logo tidak ada, skip
+    
+        # ===============================
+        # JUDUL
+        # ===============================
+        worksheet.merge_cells('A2:G2')
+        worksheet['A2'] = "STATEMENT OF ACCOUNT"
+        worksheet['A2'].font = Font(bold=True, size=14)
+        worksheet['A2'].alignment = Alignment(horizontal='center')
+    
+        worksheet.merge_cells('A3:G3')
+        worksheet['A3'] = f"Ref No. {ref_no}"
+        worksheet['A3'].alignment = Alignment(horizontal='center')
+    
+        # ===============================
+        # INFO KIRI
+        # ===============================
+        worksheet['A5'] = f"Treaty Year : {treaty_year}"
+        worksheet['A6'] = f"Quarter     : {quarter}"
+        worksheet['A7'] = f"For Months  : {months}"
+        worksheet['A8'] = f"Remarks     : {remarks}"
+    
+        # ===============================
+        # FORMAT HEADER TABLE
+        # ===============================
+        header_row = 9
+        for cell in worksheet[header_row]:
             cell.font = Font(bold=True)
     
         # ===============================
-        # FORMAT KOLOM ANGKA
+        # FORMAT ANGKA
         # ===============================
         number_format = '#,##0.00;[Red](#,##0.00)'
-    
-        cols_to_format = ['D','E','F','G']  # Premium, Commission, Claim, Amount
+        cols_to_format = ['D','E','F','G']
     
         for col in cols_to_format:
-            for row in range(2, worksheet.max_row + 1):
+            for row in range(header_row + 1, worksheet.max_row + 1):
                 cell = worksheet[f"{col}{row}"]
                 cell.number_format = number_format
+                cell.alignment = Alignment(horizontal='right')
     
         # ===============================
         # AUTO WIDTH
@@ -289,11 +334,3 @@ elif mode == "Laporan SOA (SOA Report)":
                     pass
     
             worksheet.column_dimensions[col_letter].width = max_length + 2
-
-    final_filename = file_name_input.strip() or "SOA_Report"
-
-    st.download_button(
-        "⬇️ Download Report",
-        data=output.getvalue(),
-        file_name=f"{final_filename}.xlsx"
-    )
