@@ -25,6 +25,9 @@ if "result_data" not in st.session_state:
 # ===============================
 def process_data(df1, df2):
 
+    df1.columns = df1.columns.str.strip()
+    df2.columns = df2.columns.str.strip()
+
     df1['QS'] = pd.to_numeric(df1['QS'], errors='coerce').fillna(0)
     df1['SPL'] = pd.to_numeric(df1['SPL'], errors='coerce').fillna(0)
     df1 = df1[~((df1['QS'] == 0) & (df1['SPL'] == 0))]
@@ -36,7 +39,7 @@ def process_data(df1, df2):
 
     df1['UY-COB'] = df1['UY'].astype(str) + "-" + df1['COB']
 
-    df2.columns = df2.columns.str.strip().str.lower()
+    df2.columns = df2.columns.str.lower()
     df2['uy'] = df2['uy'].astype(str).str.strip()
 
     for col in ['broker','cob','group']:
@@ -95,6 +98,9 @@ def process_data(df1, df2):
     merged['sp_ceding'] = merged['SPL'] * merged['sharere']
     merged['komisi_sp'] = merged['sp_ceding'] * merged['komisisp']
 
+    # ✅ FIX KOLOM (PENTING)
+    merged.columns = merged.columns.str.strip().str.upper()
+
     return merged
 
 # ===============================
@@ -112,16 +118,27 @@ def add_total_row(df):
 # ===============================
 def generate_report(df):
 
-    df['Premium'] = df['QS'] + df['SPL']
-    df['Commission'] = df['komisi_qs'] + df['komisi_sp']
-    df['Claim'] = 0
-    df['Amount'] = df['Premium'] - df['Commission']
+    # ✅ FIX KOLOM (PENTING)
+    df.columns = df.columns.str.strip().str.upper()
+
+    # ✅ VALIDASI
+    required_cols = ['CURRENCY','COB','UY','QS','SPL','KOMISI_QS','KOMISI_SP']
+    missing = [c for c in required_cols if c not in df.columns]
+
+    if missing:
+        st.error(f"Kolom tidak ditemukan: {missing}")
+        st.stop()
+
+    df['PREMIUM'] = df['QS'] + df['SPL']
+    df['COMMISSION'] = df['KOMISI_QS'] + df['KOMISI_SP']
+    df['CLAIM'] = 0
+    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION']
 
     grouped = df.groupby(['CURRENCY','COB','UY']).agg({
-        'Premium':'sum',
-        'Commission':'sum',
-        'Claim':'sum',
-        'Amount':'sum'
+        'PREMIUM':'sum',
+        'COMMISSION':'sum',
+        'CLAIM':'sum',
+        'AMOUNT':'sum'
     }).reset_index()
 
     final_rows = []
@@ -135,21 +152,21 @@ def generate_report(df):
             for _, row in df_cob.iterrows():
                 final_rows.append([
                     curr, cob, row['UY'],
-                    row['Premium'], row['Commission'],
-                    row['Claim'], row['Amount']
+                    row['PREMIUM'], row['COMMISSION'],
+                    row['CLAIM'], row['AMOUNT']
                 ])
 
-            total = df_cob[['Premium','Commission','Claim','Amount']].sum()
+            total = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
             final_rows.append(["", f"{cob} TOTAL", "", *total])
 
-        total_curr = df_curr[['Premium','Commission','Claim','Amount']].sum()
+        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
         final_rows.append([f"{curr} TOTAL","","", *total_curr])
 
     return pd.DataFrame(final_rows,
         columns=['Currency','COB','UY','Premium','Commission','Claim','Amount'])
 
 # ===============================
-# MODE 1: PROCESSING
+# MODE 1
 # ===============================
 if mode == "Spreading Data (SOA Processing)":
 
@@ -173,17 +190,14 @@ if mode == "Spreading Data (SOA Processing)":
 
         st.session_state["result_data"] = result
 
-        # TOTAL
         st.subheader("Total SOA")
         st.dataframe(add_total_row(df1))
 
         st.subheader("Total Output")
         st.dataframe(add_total_row(result))
 
-        # FILE NAME
         file_name_input = st.text_input("Nama file", value="SOA_Result")
 
-        # DOWNLOAD
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             result.to_excel(writer, index=False)
@@ -197,7 +211,7 @@ if mode == "Spreading Data (SOA Processing)":
         )
 
 # ===============================
-# MODE 2: REPORT
+# MODE 2
 # ===============================
 elif mode == "Laporan SOA (SOA Report)":
 
@@ -230,7 +244,6 @@ elif mode == "Laporan SOA (SOA Report)":
     st.subheader("Report SOA")
     st.dataframe(report)
 
-    # FILE NAME
     file_name_input = st.text_input("Nama file report", value="SOA_Report")
 
     output = io.BytesIO()
