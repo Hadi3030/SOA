@@ -212,19 +212,6 @@ if mode == "Spreading Data (SOA Processing)":
 else:
 
     st.title("📑 SOA Report")
-    
-    st.markdown("### 🧾 Informasi Header")
-
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        ref_no = st.text_input("Ref No", "....../DUWR/..../20..")
-        treaty_year = st.text_input("Treaty Year", "2026")
-        quarter = st.text_input("Quarter", "IV Quota Share")
-    
-    with col2:
-        for_months = st.text_input("For Months", "Oct - Dec 2025")
-        remarks = st.text_input("Remarks", "-")
 
     source = st.radio(
         "Sumber Data",
