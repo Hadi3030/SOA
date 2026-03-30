@@ -124,49 +124,45 @@ def generate_report(df, tipe):
     rows = []
 
     for curr in grouped['CURRENCY'].unique():
-    df_curr = grouped[grouped['CURRENCY'] == curr]
+        df_curr = grouped[grouped['CURRENCY'] == curr]
 
-    first_currency_row = True  # penanda
+        first_currency_row = True
 
-    for cob in df_curr['COB'].unique():
-        df_cob = df_curr[df_curr['COB'] == cob]
+        for cob in df_curr['COB'].unique():
+            df_cob = df_curr[df_curr['COB'] == cob]
 
-        for _, r in df_cob.iterrows():
+            for _, r in df_cob.iterrows():
 
-            # hanya tampilkan currency di baris pertama saja
-            currency_val = curr if first_currency_row else ""
+                currency_val = curr if first_currency_row else ""
 
-            rows.append([
-                currency_val,
-                cob,
-                r['UY'],
-                r['PREMIUM'],
-                r['COMMISSION'],
-                r['CLAIM'],
-                r['AMOUNT']
-            ])
+                rows.append([
+                    currency_val,
+                    cob,
+                    r['UY'],
+                    r['PREMIUM'],
+                    r['COMMISSION'],
+                    r['CLAIM'],
+                    r['AMOUNT']
+                ])
 
-            first_currency_row = False  # setelah baris pertama, kosongkan
+                first_currency_row = False
 
-        # SUBTOTAL COB
-        subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-        rows.append(["", f"{cob} TOTAL", "", *subtotal])
-
-    # TOTAL CURRENCY
-    total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-    rows.append([f"{curr} TOTAL","","", *total_curr])
-
-    rows.append(["","","","","","",""])  # spasi
-
+            # SUBTOTAL PER COB
             subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
             rows.append(["", f"{cob} TOTAL", "", *subtotal])
 
+        # TOTAL PER CURRENCY
         total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
         rows.append([f"{curr} TOTAL","","", *total_curr])
-        rows.append(["","","","","","",""])  # spasi
 
-    return pd.DataFrame(rows, columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
+        # SPASI ANTAR CURRENCY
+        rows.append(["","","","","","",""])
 
+    return pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT']
+    )
+    
 report_qs = generate_report(df.copy(), "QS")
 report_sp = generate_report(df.copy(), "SP")
 
