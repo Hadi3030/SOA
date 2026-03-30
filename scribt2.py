@@ -106,32 +106,55 @@ remarks = st.text_input("Remarks", value="-")
 # ===============================
 # EXPORT EXCEL
 # ===============================
-file_name = st.text_input("Nama file", value="SOA_Report")
-
-output = io.BytesIO()
-
 from openpyxl.styles import Font, Alignment
+from openpyxl.drawing.image import Image
 from openpyxl.utils import get_column_letter
 
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
-    report.to_excel(writer, index=False, sheet_name='SOA Report', startrow=8)
+    report.to_excel(writer, index=False, sheet_name='SOA Report', startrow=10)
 
     ws = writer.sheets['SOA Report']
 
-    # HEADER
+    # ===============================
+    # LOGO
+    # ===============================
+    try:
+        logo = Image("askrindo.jpg")  # pastikan file ada di folder
+        logo.width = 120
+        logo.height = 60
+        ws.add_image(logo, "A1")
+    except:
+        pass
+
+    # ===============================
+    # HEADER ATAS
+    # ===============================
     ws.merge_cells('A2:G2')
     ws['A2'] = "STATEMENT OF ACCOUNT"
     ws['A2'].font = Font(bold=True, size=14)
     ws['A2'].alignment = Alignment(horizontal='center')
 
-    # FORMAT NUMBER
+    ws.merge_cells('A3:G3')
+    ws['A3'] = f"Ref No. {ref_no}"
+    ws['A3'].alignment = Alignment(horizontal='center')
+
+    ws['A5'] = f"Treaty Year : {treaty_year}"
+    ws['A6'] = f"Quarter     : {quarter}"
+    ws['A7'] = f"For Months  : {months}"
+    ws['A8'] = f"Remarks     : {remarks}"
+
+    # ===============================
+    # FORMAT ANGKA
+    # ===============================
     number_format = '#,##0.00;[Red](#,##0.00)'
     for col in ['D','E','F','G']:
-        for row in range(10, ws.max_row + 1):
+        for row in range(12, ws.max_row + 1):
             ws[f"{col}{row}"].number_format = number_format
 
+    # ===============================
     # AUTO WIDTH
+    # ===============================
     for col in ws.columns:
         max_length = 0
         col_letter = get_column_letter(col[0].column)
