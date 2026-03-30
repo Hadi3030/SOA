@@ -225,44 +225,113 @@ def write_sheet(writer, data, name, tipe, ref):
     current_currency = None
 
     # BODY STYLE
-    for row in range(14, ws.max_row+1):
+    from openpyxl.styles import PatternFill
 
+    white_fill = PatternFill("solid", fgColor="FFFFFF")
+
+    current_currency = None
+    
+    for row in range(14, ws.max_row+1):
+    
         val_curr = ws[f"A{row}"].value
         val_cob  = ws[f"B{row}"].value
-
-        # alignment
+    
+        # ============================
+        # DEFAULT PUTIH TANPA GARIS
+        # ============================
+        for col in "ABCDEFG":
+            cell = ws[f"{col}{row}"]
+            cell.fill = white_fill
+            cell.border = no_border
+    
+        # ============================
+        # SKIP BARIS KOSONG
+        # ============================
+        if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFG"):
+            current_currency = None
+            continue
+    
+        # ============================
+        # ALIGNMENT
+        # ============================
         ws[f"A{row}"].alignment = Alignment(horizontal='left')
         ws[f"B{row}"].alignment = Alignment(horizontal='left')
         ws[f"C{row}"].alignment = Alignment(horizontal='center')
-
-        # detect currency block
+    
+        # ============================
+        # DETECT CURRENCY
+        # ============================
         if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
             current_currency = val_curr
-
-        # kolom A grey (vertical)
-        if current_currency:
+    
+        # ============================
+        # KOLOM A (VERTICAL GREY)
+        # ============================
+        if current_currency and val_cob not in ["", None]:
             ws[f"A{row}"].fill = grey_fill
-
-        # total currency → full grey
+    
+        # ============================
+        # TOTAL CURRENCY (FULL GREY)
+        # ============================
         if val_curr and "TOTAL" in str(val_curr):
             for col in "ABCDEFG":
                 ws[f"{col}{row}"].fill = grey_fill
             current_currency = None
-
-        # bold COB + total
+    
+        # ============================
+        # BOLD
+        # ============================
+        ws[f"A{row}"].font = Font(bold=True)
         ws[f"B{row}"].font = Font(bold=True)
-
+    
         if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
             for col in "ABCDEFG":
                 ws[f"{col}{row}"].font = Font(bold=True)
-
-        # number format
+    
+        # ============================
+        # FORMAT ANGKA
+        # ============================
         for col in ['D','E','F','G']:
             ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
-
-        # remove border
-        for col in "ABCDEFG":
-            ws[f"{col}{row}"].border = no_border
+            
+        # for row in range(14, ws.max_row+1):
+    
+        #     val_curr = ws[f"A{row}"].value
+        #     val_cob  = ws[f"B{row}"].value
+    
+        #     # alignment
+        #     ws[f"A{row}"].alignment = Alignment(horizontal='left')
+        #     ws[f"B{row}"].alignment = Alignment(horizontal='left')
+        #     ws[f"C{row}"].alignment = Alignment(horizontal='center')
+    
+        #     # detect currency block
+        #     if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+        #         current_currency = val_curr
+    
+        #     # kolom A grey (vertical)
+        #     if current_currency:
+        #         ws[f"A{row}"].fill = grey_fill
+    
+        #     # total currency → full grey
+        #     if val_curr and "TOTAL" in str(val_curr):
+        #         for col in "ABCDEFG":
+        #             ws[f"{col}{row}"].fill = grey_fill
+        #         current_currency = None
+    
+        #     # bold COB + total
+        #     ws[f"B{row}"].font = Font(bold=True)
+    
+        #     if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
+        #         for col in "ABCDEFG":
+        #             ws[f"{col}{row}"].font = Font(bold=True)
+    
+        #     # number format
+        #     for col in ['D','E','F','G']:
+        #         ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
+    
+            # remove border
+            for col in "ABCDEFG":
+                ws[f"{col}{row}"].border = no_border
 
     # NOTE
     last = ws.max_row + 2
