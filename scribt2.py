@@ -19,6 +19,20 @@ df = pd.read_excel(file)
 # ===============================
 # CLEANING
 # ===============================
+
+# ===============================
+# CLEAN NUMERIC (PENTING BANGET)
+# ===============================
+num_cols = ['QS_CEDING','SP_CEDING','KOMISI_QS','KOMISI_SP']
+
+for col in num_cols:
+    df[col] = (
+        df[col]
+        .astype(str)
+        .str.replace(',', '', regex=False)   # hapus koma ribuan
+        .str.replace(' ', '', regex=False)   # hapus spasi
+    )
+    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 df.columns = df.columns.str.strip().str.upper()
 
 required_cols = [
