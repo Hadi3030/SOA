@@ -6,19 +6,18 @@ st.set_page_config(page_title="SOA Report", layout="wide")
 
 st.title("📑 SOA Report Generator")
 
-# ===============================
-# UPLOAD FILE
-# ===============================
 file = st.file_uploader("Upload File SOA", type=["xlsx"])
 
 if not file:
     st.stop()
 
-df = pd.read_excel(file)
+excel_file = pd.ExcelFile(file)
+sheet_names = excel_file.sheet_names
 
-# ===============================
-# CLEANING
-# ===============================
+# PILIH SHEET
+sheet = st.selectbox("Pilih Sheet", sheet_names)
+
+df = pd.read_excel(excel_file, sheet_name=sheet)
 
 # ===============================
 # CLEAN NUMERIC (PENTING BANGET)
@@ -97,6 +96,12 @@ report = pd.DataFrame(final_rows,
 # ===============================
 st.subheader("📊 Report SOA")
 st.dataframe(report)
+
+ref_no = st.text_input("Ref No", value="")
+treaty_year = st.text_input("Treaty Year", value="2026")
+quarter = st.text_input("Quarter", value="Q1")
+months = st.text_input("For Months", value="Jan - Mar")
+remarks = st.text_input("Remarks", value="-")
 
 # ===============================
 # EXPORT EXCEL
