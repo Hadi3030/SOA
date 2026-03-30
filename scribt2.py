@@ -29,6 +29,21 @@ mapping = {
 df = df.rename(columns=mapping)
 
 # ===============================
+# FIX TEXT (PENTING BANGET)
+# ===============================
+for col in ['CURRENCY', 'COB', 'BROKER']:
+    if col in df.columns:
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.strip()        # hapus spasi depan belakang
+            .str.upper()        # samakan huruf
+        )
+
+df = df[df['CURRENCY'] != ""]
+df = df[df['CURRENCY'].notna()]
+
+# ===============================
 # FILTER BROKER
 # ===============================
 broker_list = df['BROKER'].dropna().unique().tolist()
