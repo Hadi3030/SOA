@@ -22,30 +22,45 @@ df = pd.read_excel(excel_file, sheet_name=sheet)
 df.columns = df.columns.str.strip().str.lower()
 
 mapping = {
-    'prod':'PROD','cob':'COB','uy':'UY',
-    'curr':'CURRENCY','broker':'BROKER',
-    'qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
-    'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP'
+    'prod':'PROD',
+    'cob':'COB',
+    'uy':'UY',
+    'curr':'CURRENCY',
+    'broker':'BROKER',
+    'qs_ceding':'QS_CEDING',
+    'sp_ceding':'SP_CEDING',
+    'komisi_qs':'KOMISI_QS',
+    'komisi_sp':'KOMISI_SP'
 }
 df = df.rename(columns=mapping)
 
 # ===============================
 # SELECT BROKER
 # ===============================
-broker_list = sorted(df['BROKER'].dropna().unique())
-selected_broker = st.multiselect(
-    "Pilih Broker",
-    options=["ALL"] + broker_list,
-    default=["ALL"]
-)
+broker_list = df['BROKER'].dropna().unique().tolist()
+broker_list.insert(0, "ALL")
 
-if "ALL" not in selected_broker:
-    df = df[df['BROKER'].isin(selected_broker)]
+selected_broker = st.selectbox("Pilih Broker", broker_list)
+
+if selected_broker != "ALL":
+    df = df[df['BROKER'] == selected_broker]
+
+# ===============================
+# SELECT LT
+# ===============================
+lt_option = st.selectbox("Filter Long Term", ["ALL", "LT", "NON-LT"])
+
+if lt_option != "ALL":
+    if lt_option == "LT":
+        df = df[df['COB'].str.contains("LT", case=False, na=False)]
+    else:
+        df = df[~df['COB'].str.contains("LT", case=False, na=False)]
 
 # ===============================
 # CLEAN NUMERIC
 # ===============================
 num_cols = ['QS_CEDING','SP_CEDING','KOMISI_QS','KOMISI_SP']
+
 for col in num_cols:
     df[col] = (
         df[col].astype(str)
@@ -59,7 +74,8 @@ for col in num_cols:
 # ===============================
 def parse_prod(x):
     try:
-        return int(str(x)[:4]), int(str(x)[-2:])
+        x = str(x)
+        return int(x[:4]), int(x[-2:])
     except:
         return None, None
 
@@ -69,18 +85,27 @@ df = df.dropna(subset=['YEAR','MONTH'])
 # ===============================
 # MONTH + QUARTER
 # ===============================
-month_map = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
-             7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
+month_map = {
+    1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
+    7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'
+}
 
-min_m, max_m = int(df['MONTH'].min()), int(df['MONTH'].max())
+min_m = int(df['MONTH'].min())
+max_m = int(df['MONTH'].max())
 year = int(df['YEAR'].mode()[0])
+
 months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
-def get_q(m): return ["I","II","III","IV"][(m-1)//3]
-quarter = get_q(max_m)
+def get_quarter(m):
+    if m <= 3: return "I"
+    elif m <= 6: return "II"
+    elif m <= 9: return "III"
+    else: return "IV"
+
+quarter = get_quarter(max_m)
 
 # ===============================
-# REPORT + TOTAL
+# GENERATE REPORT + TOTAL
 # ===============================
 def generate_report(df, tipe):
 
@@ -96,65 +121,62 @@ def generate_report(df, tipe):
 
     grouped = df.groupby(['CURRENCY','COB','UY']).sum(numeric_only=True).reset_index()
 
-    final = []
+    rows = []
 
     for curr in grouped['CURRENCY'].unique():
-        df_curr = grouped[grouped['CURRENCY']==curr]
+        df_curr = grouped[grouped['CURRENCY'] == curr]
 
         for cob in df_curr['COB'].unique():
-            df_cob = df_curr[df_curr['COB']==cob]
+            df_cob = df_curr[df_curr['COB'] == cob]
 
             for _, r in df_cob.iterrows():
-                final.append([curr, cob, r['UY'], r['PREMIUM'], r['COMMISSION'], r['CLAIM'], r['AMOUNT'], False])
+                rows.append([curr, cob, r['UY'], r['PREMIUM'], r['COMMISSION'], r['CLAIM'], r['AMOUNT']])
 
-            t = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-            final.append(["", f"{cob} TOTAL", "", *t, True])
+            subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+            rows.append(["", f"{cob} TOTAL", "", *subtotal])
 
-        t2 = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-        final.append([f"{curr} TOTAL","","",*t2, True])
+        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+        rows.append([f"{curr} TOTAL","","", *total_curr])
+        rows.append(["","","","","","",""])  # spasi
 
-        final.append(["","","","","","","",False])
+    return pd.DataFrame(rows, columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
 
-    return pd.DataFrame(final, columns=[
-        'CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT','IS_TOTAL'
-    ])
+report_qs = generate_report(df.copy(), "QS")
+report_sp = generate_report(df.copy(), "SP")
 
-report_qs = generate_report(df.copy(),"QS")
-report_sl = generate_report(df.copy(),"SL")
+st.dataframe(report_qs)
 
 # ===============================
 # INPUT
 # ===============================
 ref_qs = st.text_input("Ref No QS")
-ref_sl = st.text_input("Ref No SL")
+ref_sp = st.text_input("Ref No SL")
 note = st.text_area("Note")
-file_name = st.text_input("Nama file","SOA_Report")
+file_name = st.text_input("Nama file", value="SOA_Report")
 
 # ===============================
 # EXPORT
 # ===============================
 output = io.BytesIO()
 
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment
 from openpyxl.drawing.image import Image
 
-def write_sheet(writer, data, sheet, tipe, ref):
+def write_sheet(writer, data, name, tipe, ref):
 
-    data.drop(columns=['IS_TOTAL']).to_excel(writer, index=False, sheet_name=sheet, startrow=12)
-    ws = writer.sheets[sheet]
+    data.to_excel(writer, index=False, sheet_name=name, startrow=12)
+    ws = writer.sheets[name]
 
-    # REMOVE GRIDLINES
-    ws.sheet_view.showGridLines = False
-
-    # LOGO
+    # LOGO (fix 3 baris)
     try:
         logo = Image("askrindo.jpg")
-        logo.height = 80
+        logo.height = 60
+        logo.width = 140
         ws.add_image(logo, "A1")
     except:
         pass
 
-    # TITLE
+    # TITLE (baris 4)
     ws.merge_cells('A4:G4')
     ws['A4'] = "STATEMENT OF ACCOUNT"
     ws['A4'].font = Font(bold=True, size=14)
@@ -165,53 +187,45 @@ def write_sheet(writer, data, sheet, tipe, ref):
     ws['A5'].font = Font(bold=True)
     ws['A5'].alignment = Alignment(horizontal='center')
 
-    # INFO (RAPI TITIK DUA)
-    labels = ["Treaty Year  :", "Quarter      :", "For Months   :", "Broker       :"]
-    values = [year, f"{quarter} {tipe}", months_text,
-              "ALL" if "ALL" in selected_broker else ", ".join(selected_broker)]
+    # HEADER RAPI
+    ws['A7'] = "Treaty Year  :"
+    ws['B7'] = year
 
-    for i, (l, v) in enumerate(zip(labels, values)):
-        ws[f"A{7+i}"] = l
-        ws[f"A{7+i}"].alignment = Alignment(horizontal='right')
-        ws[f"B{7+i}"] = v
+    ws['A8'] = "Quarter      :"
+    ws['B8'] = f"{quarter} {tipe}"
 
-    # HEADER STYLE
-    fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
-    font_white = Font(color="FFFFFF", bold=True)
+    ws['A9'] = "For Months   :"
+    ws['B9'] = months_text
 
-    for col in range(1,8):
-        c = ws.cell(row=13,column=col)
-        c.fill = fill
-        c.font = font_white
-        c.alignment = Alignment(horizontal='center')
+    ws['A10'] = "Broker       :"
+    ws['B10'] = selected_broker
 
-    # FORMAT + BOLD TOTAL
-    for i, row in enumerate(data.itertuples(), start=14):
-        if row.IS_TOTAL:
-            for col in range(1,8):
-                ws.cell(row=i, column=col).font = Font(bold=True)
+    # BOLD COLUMN
+    for row in range(13, ws.max_row+1):
+        ws[f"A{row}"].font = Font(bold=True)
+        ws[f"B{row}"].font = Font(bold=True)
 
-        for col_letter in ['D','E','F','G']:
-            ws[f"{col_letter}{i}"].number_format = '#,##0.00;[Red](#,##0.00)'
+        if "TOTAL" in str(ws[f"B{row}"].value) or "TOTAL" in str(ws[f"A{row}"].value):
+            for col in "ABCDEFG":
+                ws[f"{col}{row}"].font = Font(bold=True)
 
-    # NOTE DI BAWAH
+    # NOTE PALING BAWAH
     last_row = ws.max_row + 2
     ws[f"A{last_row}"] = "Note :"
     ws[f"A{last_row}"].font = Font(bold=True)
-    ws[f"B{last_row}"] = note
 
-# WRITE
+    ws[f"B{last_row}"] = note
+    ws[f"B{last_row}"].font = Font(bold=True)
+
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
     write_sheet(writer, report_qs, "QS Report", "Quota Share", ref_qs)
-    write_sheet(writer, report_sl, "SL Report", "Surplus", ref_sl)
+    write_sheet(writer, report_sp, "SL Report", "Surplus", ref_sp)
 
-# DOWNLOAD
 st.download_button(
-    "⬇️ Download",
+    "⬇️ Download Report",
     data=output.getvalue(),
     file_name=f"{file_name}.xlsx"
 )
-
 
 # import streamlit as st
 # import pandas as pd
@@ -274,8 +288,7 @@ st.download_button(
 # # ===============================
 # def parse_prod(x):
 #     try:
-#         x = str(x)
-#         return int(x[:4]), int(x[-2:])
+#         return int(str(x)[:4]), int(str(x)[-2:])
 #     except:
 #         return None, None
 
@@ -288,19 +301,15 @@ st.download_button(
 # month_map = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
 #              7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
 
-# min_m = int(df['MONTH'].min())
-# max_m = int(df['MONTH'].max())
+# min_m, max_m = int(df['MONTH'].min()), int(df['MONTH'].max())
 # year = int(df['YEAR'].mode()[0])
-
 # months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
-# def get_q(m):
-#     return ["I","II","III","IV"][(m-1)//3]
-
+# def get_q(m): return ["I","II","III","IV"][(m-1)//3]
 # quarter = get_q(max_m)
 
 # # ===============================
-# # GENERATE REPORT (WITH TOTAL)
+# # REPORT + TOTAL
 # # ===============================
 # def generate_report(df, tipe):
 
@@ -325,31 +334,22 @@ st.download_button(
 #             df_cob = df_curr[df_curr['COB']==cob]
 
 #             for _, r in df_cob.iterrows():
-#                 final.append([curr, cob, r['UY'], r['PREMIUM'], r['COMMISSION'], r['CLAIM'], r['AMOUNT']])
+#                 final.append([curr, cob, r['UY'], r['PREMIUM'], r['COMMISSION'], r['CLAIM'], r['AMOUNT'], False])
 
-#             # TOTAL COB
 #             t = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-#             final.append(["", f"{cob} TOTAL", "", *t])
+#             final.append(["", f"{cob} TOTAL", "", *t, True])
 
-#         # TOTAL CURRENCY
 #         t2 = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-#         final.append([f"{curr} TOTAL","","",*t2])
+#         final.append([f"{curr} TOTAL","","",*t2, True])
 
-#         # SPASI
-#         final.append(["","","","","","",""])
+#         final.append(["","","","","","","",False])
 
 #     return pd.DataFrame(final, columns=[
-#         'CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'
+#         'CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT','IS_TOTAL'
 #     ])
 
 # report_qs = generate_report(df.copy(),"QS")
 # report_sl = generate_report(df.copy(),"SL")
-
-# st.subheader("QS Report")
-# st.dataframe(report_qs)
-
-# st.subheader("SL Report")
-# st.dataframe(report_sl)
 
 # # ===============================
 # # INPUT
@@ -369,8 +369,11 @@ st.download_button(
 
 # def write_sheet(writer, data, sheet, tipe, ref):
 
-#     data.to_excel(writer, index=False, sheet_name=sheet, startrow=12)
+#     data.drop(columns=['IS_TOTAL']).to_excel(writer, index=False, sheet_name=sheet, startrow=12)
 #     ws = writer.sheets[sheet]
+
+#     # REMOVE GRIDLINES
+#     ws.sheet_view.showGridLines = False
 
 #     # LOGO
 #     try:
@@ -380,7 +383,7 @@ st.download_button(
 #     except:
 #         pass
 
-#     # TITLE (ROW 4)
+#     # TITLE
 #     ws.merge_cells('A4:G4')
 #     ws['A4'] = "STATEMENT OF ACCOUNT"
 #     ws['A4'].font = Font(bold=True, size=14)
@@ -388,38 +391,43 @@ st.download_button(
 
 #     ws.merge_cells('A5:G5')
 #     ws['A5'] = f"Ref No. {ref}"
+#     ws['A5'].font = Font(bold=True)
 #     ws['A5'].alignment = Alignment(horizontal='center')
 
-#     # INFO RAPI (SATU KOLOM TITIK DUA)
-#     ws['A7'] = "Treaty Year  :"
-#     ws['B7'] = year
+#     # INFO (RAPI TITIK DUA)
+#     labels = ["Treaty Year  :", "Quarter      :", "For Months   :", "Broker       :"]
+#     values = [year, f"{quarter} {tipe}", months_text,
+#               "ALL" if "ALL" in selected_broker else ", ".join(selected_broker)]
 
-#     ws['A8'] = "Quarter      :"
-#     ws['B8'] = f"{quarter} {tipe}"
-
-#     ws['A9'] = "For Months   :"
-#     ws['B9'] = months_text
-
-#     ws['A10'] = "Broker       :"
-#     ws['B10'] = "ALL" if "ALL" in selected_broker else ", ".join(selected_broker)
-
-#     ws['A11'] = "Note         :"
-#     ws['B11'] = note
+#     for i, (l, v) in enumerate(zip(labels, values)):
+#         ws[f"A{7+i}"] = l
+#         ws[f"A{7+i}"].alignment = Alignment(horizontal='right')
+#         ws[f"B{7+i}"] = v
 
 #     # HEADER STYLE
 #     fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
-#     font = Font(color="FFFFFF", bold=True)
+#     font_white = Font(color="FFFFFF", bold=True)
 
 #     for col in range(1,8):
 #         c = ws.cell(row=13,column=col)
 #         c.fill = fill
-#         c.font = font
+#         c.font = font_white
 #         c.alignment = Alignment(horizontal='center')
 
-#     # FORMAT ANGKA
-#     for col in ['D','E','F','G']:
-#         for r in range(14, ws.max_row+1):
-#             ws[f"{col}{r}"].number_format = '#,##0.00;[Red](#,##0.00)'
+#     # FORMAT + BOLD TOTAL
+#     for i, row in enumerate(data.itertuples(), start=14):
+#         if row.IS_TOTAL:
+#             for col in range(1,8):
+#                 ws.cell(row=i, column=col).font = Font(bold=True)
+
+#         for col_letter in ['D','E','F','G']:
+#             ws[f"{col_letter}{i}"].number_format = '#,##0.00;[Red](#,##0.00)'
+
+#     # NOTE DI BAWAH
+#     last_row = ws.max_row + 2
+#     ws[f"A{last_row}"] = "Note :"
+#     ws[f"A{last_row}"].font = Font(bold=True)
+#     ws[f"B{last_row}"] = note
 
 # # WRITE
 # with pd.ExcelWriter(output, engine='openpyxl') as writer:
