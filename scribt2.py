@@ -207,24 +207,60 @@ def write_sheet(writer, data, name, tipe, ref):
 
     # FORMAT BODY
     for row in range(14, ws.max_row+1):
-
+    
+        val_curr = ws[f"A{row}"].value
+        val_cob  = ws[f"B{row}"].value
+    
+        # ALIGNMENT
         ws[f"A{row}"].alignment = Alignment(horizontal='left')
         ws[f"B{row}"].alignment = Alignment(horizontal='left')
         ws[f"C{row}"].alignment = Alignment(horizontal='center')
-
-        # Currency shading
-        if ws[f"A{row}"].value not in ["", None]:
+    
+        # ============================
+        # L-SHAPE COLOR LOGIC
+        # ============================
+    
+        # 1. KOLOM CURRENCY (VERTIKAL ABU)
+        if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+            ws[f"A{row}"].fill = grey_fill
+    
+        # 2. BARIS TOTAL CURRENCY (HORIZONTAL ABU)
+        if "TOTAL" in str(val_curr):
             for col in "ABCDEFG":
                 ws[f"{col}{row}"].fill = grey_fill
-
-        # TOTAL bold
-        if "TOTAL" in str(ws[f"B{row}"].value) or "TOTAL" in str(ws[f"A{row}"].value):
+    
+        # ============================
+        # BOLD TOTAL
+        # ============================
+        if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
             for col in "ABCDEFG":
                 ws[f"{col}{row}"].font = Font(bold=True)
-
-        # NUMBER FORMAT
+    
+        # ============================
+        # FORMAT ANGKA
+        # ============================
         for col in ['D','E','F','G']:
             ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
+            
+    # for row in range(14, ws.max_row+1):
+
+    #     ws[f"A{row}"].alignment = Alignment(horizontal='left')
+    #     ws[f"B{row}"].alignment = Alignment(horizontal='left')
+    #     ws[f"C{row}"].alignment = Alignment(horizontal='center')
+
+    #     # Currency shading
+    #     if ws[f"A{row}"].value not in ["", None]:
+    #         for col in "ABCDEFG":
+    #             ws[f"{col}{row}"].fill = grey_fill
+
+    #     # TOTAL bold
+    #     if "TOTAL" in str(ws[f"B{row}"].value) or "TOTAL" in str(ws[f"A{row}"].value):
+    #         for col in "ABCDEFG":
+    #             ws[f"{col}{row}"].font = Font(bold=True)
+
+    #     # NUMBER FORMAT
+    #     for col in ['D','E','F','G']:
+    #         ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
 
     # NOTE
     last = ws.max_row + 2
