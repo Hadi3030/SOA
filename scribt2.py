@@ -103,9 +103,14 @@ quarter = st.text_input("Quarter", value="Q1")
 months = st.text_input("For Months", value="Jan - Mar")
 remarks = st.text_input("Remarks", value="-")
 
+output = io.BytesIO()
 # ===============================
 # EXPORT EXCEL
 # ===============================
+file_name = st.text_input("Nama file", value="SOA_Report")
+
+output = io.BytesIO()  # ✅ INI YANG KURANG
+
 from openpyxl.styles import Font, Alignment
 from openpyxl.drawing.image import Image
 from openpyxl.utils import get_column_letter
@@ -120,15 +125,15 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
     # LOGO
     # ===============================
     try:
-        logo = Image("askrindo.jpg")  # pastikan file ada di folder
+        logo = Image("askrindo.jpg")
         logo.width = 120
         logo.height = 60
         ws.add_image(logo, "A1")
     except:
-        pass
+        st.warning("Logo tidak ditemukan (askrindo.jpg)")
 
     # ===============================
-    # HEADER ATAS
+    # HEADER
     # ===============================
     ws.merge_cells('A2:G2')
     ws['A2'] = "STATEMENT OF ACCOUNT"
@@ -165,6 +170,9 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
         ws.column_dimensions[col_letter].width = max_length + 2
 
+# ===============================
+# DOWNLOAD
+# ===============================
 st.download_button(
     "⬇️ Download Report",
     data=output.getvalue(),
