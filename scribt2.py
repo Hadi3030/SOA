@@ -303,7 +303,7 @@ def write_sheet(writer, data, name, tipe, ref):
             current_currency = val_curr
 
         # KOLOM A GREY
-        if current_currency and val_cob not in ["", None]:
+        if current_currency:
             ws[f"A{row}"].fill = grey_fill
 
         # TOTAL CURRENCY FULL GREY
