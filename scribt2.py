@@ -43,16 +43,32 @@ df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 # ===============================
 # FILTER COB
 # ===============================
+# ===============================
+# FILTER COB (CHECKBOX)
+# ===============================
+st.subheader("Pilih COB")
+
 if "COB" in df.columns:
-    cob_list = ["All"] + sorted(df["COB"].dropna().unique().tolist())
-    # ===============================
-    # FILTER COB (MULTI SELECT)
-    # ===============================
-    if "COB" in df.columns:
-        cob_list = sorted(df["COB"].dropna().unique().tolist())
-        selected_cob = st.multiselect("Pilih COB", cob_list, default=cob_list)
-    
+    cob_list = sorted(df["COB"].dropna().unique().tolist())
+
+    selected_cob = []
+
+    # Checkbox ALL
+    all_checked = st.checkbox("ALL", value=True)
+
+    if all_checked:
+        selected_cob = cob_list
+    else:
+        for cob in cob_list:
+            if st.checkbox(cob):
+                selected_cob.append(cob)
+
+    # Apply filter
+    if selected_cob:
         df = df[df["COB"].isin(selected_cob)]
+    else:
+        st.warning("Pilih minimal 1 COB")
+        st.stop()
 # ===============================
 # FILTER
 # ===============================
