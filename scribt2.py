@@ -127,9 +127,12 @@ def generate_report(df, tipe, zero_option):
 
     rows = []
 
+    # ============================
+    # LOOP CURRENCY
+    # ============================
     for curr, df_curr in grouped.groupby('CURRENCY'):
 
-        # 🔥 FILTER CURRENCY (DI SINI)
+        # 🔥 FILTER ZERO (LEVEL CURRENCY)
         if zero_option == "Hide Zero Rows":
             df_curr = df_curr[
                 ~(
@@ -137,38 +140,18 @@ def generate_report(df, tipe, zero_option):
                     .all(axis=1)
                 )
             ]
-    
-        # ❌ kalau currency kosong → skip 1 blok ini
+
         if df_curr.empty:
             continue
-    
+
         first_row = True
-    
-        # ============================
-        # LOOP COB
-        # ============================for curr, df_curr in grouped.groupby('CURRENCY'):
-    
-        # 🔥 FILTER CURRENCY (DI SINI)
-        if zero_option == "Hide Zero Rows":
-            df_curr = df_curr[
-                ~(
-                    (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
-                    .all(axis=1)
-                )
-            ]
-    
-        # ❌ kalau currency kosong → skip 1 blok ini
-        if df_curr.empty:
-            continue
-    
-        first_row = True
-    
+
         # ============================
         # LOOP COB
         # ============================
         for cob, df_cob in df_curr.groupby('COB'):
-    
-            # 🔥 FILTER COB
+
+            # 🔥 FILTER ZERO (LEVEL COB)
             if zero_option == "Hide Zero Rows":
                 df_cob = df_cob[
                     ~(
@@ -176,11 +159,13 @@ def generate_report(df, tipe, zero_option):
                         .all(axis=1)
                     )
                 ]
-    
-            # ❌ kalau COB kosong → skip
+
             if df_cob.empty:
                 continue
-    
+
+            # ============================
+            # DETAIL ROW
+            # ============================
             for _, r in df_cob.iterrows():
                 rows.append([
                     curr if first_row else "",
@@ -192,22 +177,26 @@ def generate_report(df, tipe, zero_option):
                     r['AMOUNT']
                 ])
                 first_row = False
-    
+
+            # ============================
             # SUBTOTAL COB
+            # ============================
             subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
             rows.append(["", f"{cob} TOTAL", "", *subtotal])
-    
+
         # ============================
-        # 🔥 INI POSISINYA DI SINI (SETELAH LOOP COB)
+        # TOTAL CURRENCY
         # ============================
         total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-    
         rows.append([f"{curr} TOTAL","","", *total_curr])
+
+        # SPASI
         rows.append(["","","","","","",""])
 
-    return pd.DataFrame(rows,
-        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
-
+    return pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT']
+    )
 report_qs = generate_report(df.copy(), "QS", zero_option)
 report_sp = generate_report(df.copy(), "SP", zero_option)
 
