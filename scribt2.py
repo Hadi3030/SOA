@@ -69,6 +69,25 @@ if "COB" in df.columns:
     else:
         st.warning("Pilih minimal 1 COB")
         st.stop()
+
+# ===============================
+# FILTER UW YEAR
+# ===============================
+if "UY" in df.columns:
+    uy_list = sorted(df["UY"].dropna().unique().tolist())
+
+    selected_uy = st.multiselect(
+        "Pilih UW Year",
+        uy_list,
+        default=uy_list
+    )
+
+    if selected_uy:
+        df = df[df["UY"].isin(selected_uy)]
+    else:
+        st.warning("Pilih minimal 1 UW Year")
+        st.stop()
+        
 # ===============================
 # FILTER
 # ===============================
