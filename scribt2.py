@@ -151,12 +151,19 @@ def generate_report(df, tipe, zero_option):
                 ])
                 first_row = False
 
+            # subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+            # rows.append(["", f"{cob} TOTAL", "", *subtotal])
             subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-            rows.append(["", f"{cob} TOTAL", "", *subtotal])
+            if not (zero_option == "Hide Zero Rows" and (subtotal == 0).all()):
+                rows.append(["", f"{cob} TOTAL", "", *subtotal])
 
+        # total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+        # rows.append([f"{curr} TOTAL","","", *total_curr])
+        # rows.append(["","","","","","",""])
         total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-        rows.append([f"{curr} TOTAL","","", *total_curr])
-        rows.append(["","","","","","",""])
+        if not (zero_option == "Hide Zero Rows" and (total_curr == 0).all()):
+            rows.append([f"{curr} TOTAL","","", *total_curr])
+            rows.append(["","","","","","",""])
 
     return pd.DataFrame(rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
