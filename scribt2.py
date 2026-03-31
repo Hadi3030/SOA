@@ -170,14 +170,15 @@ def generate_report(df, tipe, zero_option):
 
             if df_cob.empty:
                 continue
-
+            first_cob_row = True   # 🔥 TAMBAHAN
+            
             # ============================
             # DETAIL ROW
             # ============================
             for _, r in df_cob.iterrows():
                 rows.append([
                     curr if first_row else "",
-                    cob,
+                    cob if first_cob_row else "",
                     r['UY'],
                     r['PREMIUM'],
                     r['COMMISSION'],
@@ -185,6 +186,7 @@ def generate_report(df, tipe, zero_option):
                     r['AMOUNT']
                 ])
                 first_row = False
+                first_cob_row = False
 
             # ============================
             # SUBTOTAL COB
