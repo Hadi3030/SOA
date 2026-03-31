@@ -129,81 +129,81 @@ def generate_report(df, tipe, zero_option):
 
     for curr, df_curr in grouped.groupby('CURRENCY'):
 
-    # 🔥 FILTER CURRENCY (DI SINI)
-    if zero_option == "Hide Zero Rows":
-        df_curr = df_curr[
-            ~(
-                (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
-                .all(axis=1)
-            )
-        ]
-
-    # ❌ kalau currency kosong → skip 1 blok ini
-    if df_curr.empty:
-        continue
-
-    first_row = True
-
-    # ============================
-    # LOOP COB
-    # ============================for curr, df_curr in grouped.groupby('CURRENCY'):
-
-    # 🔥 FILTER CURRENCY (DI SINI)
-    if zero_option == "Hide Zero Rows":
-        df_curr = df_curr[
-            ~(
-                (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
-                .all(axis=1)
-            )
-        ]
-
-    # ❌ kalau currency kosong → skip 1 blok ini
-    if df_curr.empty:
-        continue
-
-    first_row = True
-
-    # ============================
-    # LOOP COB
-    # ============================
-    for cob, df_cob in df_curr.groupby('COB'):
-
-        # 🔥 FILTER COB
+        # 🔥 FILTER CURRENCY (DI SINI)
         if zero_option == "Hide Zero Rows":
-            df_cob = df_cob[
+            df_curr = df_curr[
                 ~(
-                    (df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                    (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
                     .all(axis=1)
                 )
             ]
-
-        # ❌ kalau COB kosong → skip
-        if df_cob.empty:
+    
+        # ❌ kalau currency kosong → skip 1 blok ini
+        if df_curr.empty:
             continue
-
-        for _, r in df_cob.iterrows():
-            rows.append([
-                curr if first_row else "",
-                cob,
-                r['UY'],
-                r['PREMIUM'],
-                r['COMMISSION'],
-                r['CLAIM'],
-                r['AMOUNT']
-            ])
-            first_row = False
-
-        # SUBTOTAL COB
-        subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-        rows.append(["", f"{cob} TOTAL", "", *subtotal])
-
-    # ============================
-    # 🔥 INI POSISINYA DI SINI (SETELAH LOOP COB)
-    # ============================
-    total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-
-    rows.append([f"{curr} TOTAL","","", *total_curr])
-    rows.append(["","","","","","",""])
+    
+        first_row = True
+    
+        # ============================
+        # LOOP COB
+        # ============================for curr, df_curr in grouped.groupby('CURRENCY'):
+    
+        # 🔥 FILTER CURRENCY (DI SINI)
+        if zero_option == "Hide Zero Rows":
+            df_curr = df_curr[
+                ~(
+                    (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                    .all(axis=1)
+                )
+            ]
+    
+        # ❌ kalau currency kosong → skip 1 blok ini
+        if df_curr.empty:
+            continue
+    
+        first_row = True
+    
+        # ============================
+        # LOOP COB
+        # ============================
+        for cob, df_cob in df_curr.groupby('COB'):
+    
+            # 🔥 FILTER COB
+            if zero_option == "Hide Zero Rows":
+                df_cob = df_cob[
+                    ~(
+                        (df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                        .all(axis=1)
+                    )
+                ]
+    
+            # ❌ kalau COB kosong → skip
+            if df_cob.empty:
+                continue
+    
+            for _, r in df_cob.iterrows():
+                rows.append([
+                    curr if first_row else "",
+                    cob,
+                    r['UY'],
+                    r['PREMIUM'],
+                    r['COMMISSION'],
+                    r['CLAIM'],
+                    r['AMOUNT']
+                ])
+                first_row = False
+    
+            # SUBTOTAL COB
+            subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+            rows.append(["", f"{cob} TOTAL", "", *subtotal])
+    
+        # ============================
+        # 🔥 INI POSISINYA DI SINI (SETELAH LOOP COB)
+        # ============================
+        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+    
+        rows.append([f"{curr} TOTAL","","", *total_curr])
+        rows.append(["","","","","","",""])
 
     return pd.DataFrame(rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
