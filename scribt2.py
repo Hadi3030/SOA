@@ -228,6 +228,38 @@ def write_sheet(writer, data, name, tipe, ref):
     data.to_excel(writer, index=False, sheet_name=name, startrow=12)
     ws = writer.sheets[name]
 
+        # ===============================
+    # LOGO (optional)
+    # ===============================
+    try:
+        logo = Image("askrindo.jpg")
+        logo.height = 60
+        logo.width = 140
+        ws.add_image(logo, "A1")
+    except:
+        pass
+
+    # ===============================
+    # TITLE
+    # ===============================
+    ws.merge_cells('A4:G4')
+    ws['A4'] = "STATEMENT OF ACCOUNT"
+    ws['A4'].font = Font(bold=True, size=14)
+    ws['A4'].alignment = Alignment(horizontal='center')
+
+    ws.merge_cells('A5:G5')
+    ws['A5'] = f"Ref No. {ref}"
+    ws['A5'].font = Font(bold=True)
+    ws['A5'].alignment = Alignment(horizontal='center')
+
+    # ===============================
+    # HEADER INFO
+    # ===============================
+    ws['A7'] = "Treaty Year  :"; ws['B7'] = year
+    ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
+    ws['A9'] = "For Months   :"; ws['B9'] = months_text
+    ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
+    
     # HEADER TABLE
     for col in "ABCDEFG":
         cell = ws[f"{col}13"]
