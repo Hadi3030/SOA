@@ -23,8 +23,10 @@ df.columns = df.columns.str.strip().str.lower()
 
 mapping = {
     'prod':'PROD','cob':'COB','uy':'UY','curr':'CURRENCY',
-    'broker':'BROKER','qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
-    'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP'
+    'broker':'BROKER',
+    'qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
+    'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP',
+    'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP'   # 🔥 TAMBAHAN
 }
 df = df.rename(columns=mapping)
 
