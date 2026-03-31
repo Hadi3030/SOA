@@ -64,7 +64,7 @@ file_name = st.text_input("Nama File Output", value="SOA_Report")
 def generate_report(df, tipe, zero_option):
 
     if tipe == "QS":
-        df['PREMIUM'] = df['QS_CEDING']
+        df['PREMIUM'] = df['qs_ceding']
         df['COMMISSION'] = df['KOMISI_QS']
         df['CLAIM'] = df['KLAIM_QS']
     else:
