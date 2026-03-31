@@ -45,7 +45,14 @@ df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 # ===============================
 if "COB" in df.columns:
     cob_list = ["All"] + sorted(df["COB"].dropna().unique().tolist())
-    selected_cob = st.selectbox("Pilih COB", cob_list)
+    # ===============================
+    # FILTER COB (MULTI SELECT)
+    # ===============================
+    if "COB" in df.columns:
+        cob_list = sorted(df["COB"].dropna().unique().tolist())
+        selected_cob = st.multiselect("Pilih COB", cob_list, default=cob_list)
+    
+        df = df[df["COB"].isin(selected_cob)]
 
     if selected_cob != "All":
         df = df[df["COB"] == selected_cob]
