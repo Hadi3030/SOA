@@ -66,11 +66,11 @@ def generate_report(df, tipe, zero_option):
     if tipe == "QS":
         df['PREMIUM'] = df['qs_ceding']
         df['COMMISSION'] = df['komisi_qs']
-        df['CLAIM'] = df['KLAIM_QS']
+        df['CLAIM'] = df['klaim_qs']
     else:
-        df['PREMIUM'] = df['SP_CEDING']
-        df['COMMISSION'] = df['KOMISI_SP']
-        df['CLAIM'] = df['KLAIM_SP']
+        df['PREMIUM'] = df['sp_ceding']
+        df['COMMISSION'] = df['komisi_sp']
+        df['CLAIM'] = df['klaim_sp']
     
     df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION']
 
