@@ -30,6 +30,7 @@ mapping = {
 }
 df = df.rename(columns=mapping)
 
+
 # ===============================
 # FIX TEXT
 # ===============================
@@ -39,6 +40,15 @@ for col in ['CURRENCY', 'COB', 'BROKER']:
 
 df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 
+# ===============================
+# FILTER COB
+# ===============================
+if "COB" in df.columns:
+    cob_list = ["All"] + sorted(df["COB"].dropna().unique().tolist())
+    selected_cob = st.selectbox("Pilih COB", cob_list)
+
+    if selected_cob != "All":
+        df = df[df["COB"] == selected_cob]
 # ===============================
 # FILTER
 # ===============================
