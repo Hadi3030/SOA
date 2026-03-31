@@ -53,17 +53,16 @@ if "COB" in df.columns:
 
     selected_cob = []
 
-    # Checkbox ALL
-    all_checked = st.checkbox("ALL", value=True)
+    all_cob = st.checkbox("ALL COB", value=True)
 
-    if all_checked:
+    if all_cob:
         selected_cob = cob_list
     else:
-        for cob in cob_list:
-            if st.checkbox(cob):
+        cols = st.columns(3)  # biar rapi grid
+        for i, cob in enumerate(cob_list):
+            if cols[i % 3].checkbox(cob):
                 selected_cob.append(cob)
 
-    # Apply filter
     if selected_cob:
         df = df[df["COB"].isin(selected_cob)]
     else:
@@ -71,16 +70,24 @@ if "COB" in df.columns:
         st.stop()
 
 # ===============================
-# FILTER UW YEAR
+# FILTER UW YEAR (CHECKBOX)
 # ===============================
+st.subheader("Pilih UW Year")
+
 if "UY" in df.columns:
     uy_list = sorted(df["UY"].dropna().unique().tolist())
 
-    selected_uy = st.multiselect(
-        "Pilih UW Year",
-        uy_list,
-        default=uy_list
-    )
+    selected_uy = []
+
+    all_uy = st.checkbox("ALL UW YEAR", value=True)
+
+    if all_uy:
+        selected_uy = uy_list
+    else:
+        cols = st.columns(4)
+        for i, uy in enumerate(uy_list):
+            if cols[i % 4].checkbox(str(uy)):
+                selected_uy.append(uy)
 
     if selected_uy:
         df = df[df["UY"].isin(selected_uy)]
