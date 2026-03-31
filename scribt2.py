@@ -63,7 +63,12 @@ zero_option = st.selectbox(
 # ===============================
 # CLEAN NUMERIC
 # ===============================
-num_cols = ['QS_CEDING','SP_CEDING','KOMISI_QS','KOMISI_SP']
+
+num_cols = [
+    'QS_CEDING','SP_CEDING',
+    'KOMISI_QS','KOMISI_SP',
+    'KLAIM_QS','KLAIM_SP'
+]
 
 for col in num_cols:
     df[col] = (
@@ -111,11 +116,12 @@ def generate_report(df, tipe, zero_option):
     if tipe == "QS":
         df['PREMIUM'] = df['QS_CEDING']
         df['COMMISSION'] = df['KOMISI_QS']
+        df['CLAIM'] = df['KLAIM_QS']
     else:
         df['PREMIUM'] = df['SP_CEDING']
         df['COMMISSION'] = df['KOMISI_SP']
-
-    df['CLAIM'] = 0
+        df['CLAIM'] = df['KLAIM_SP']
+    
     df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION']
 
     grouped = (
