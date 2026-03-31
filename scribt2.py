@@ -53,9 +53,6 @@ if "COB" in df.columns:
         selected_cob = st.multiselect("Pilih COB", cob_list, default=cob_list)
     
         df = df[df["COB"].isin(selected_cob)]
-
-    if selected_cob != "All":
-        df = df[df["COB"] == selected_cob]
 # ===============================
 # FILTER
 # ===============================
