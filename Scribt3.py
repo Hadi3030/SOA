@@ -335,7 +335,6 @@ if st.button("⬇️ Download All Broker"):
         ws['A10'] = "Broker       :"; ws['B10'] = broker_name
 
         # HEADER TABLE
-        from openpyxl.styles import Font, PatternFill, Alignment
 
         header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
