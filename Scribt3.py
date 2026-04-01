@@ -3,7 +3,15 @@ import pandas as pd
 import io
 
 st.set_page_config(page_title="SOA Report ALL Broker", layout="wide")
-st.title("📑 SOA Report Generator - All Broker")
+
+# LOGO + TITLE
+col1, col2 = st.columns([1, 6])
+
+with col1:
+    st.image("askrindo.jpg", width=120)
+
+with col2:
+    st.title("📑 SOA Report Generator - All Broker")
 
 # ===============================
 # UPLOAD
