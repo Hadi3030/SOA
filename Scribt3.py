@@ -89,16 +89,39 @@ zero_option = st.selectbox(
 def clean_number(x):
     if pd.isna(x):
         return 0
-    
-    x = str(x).strip()
-    
-    # format Indonesia: 1.234.567,89 → 1234567.89
-    x = x.replace('.', '').replace(',', '.')
+
+    # kalau sudah numeric → jangan diapa-apain
+    if isinstance(x, (int, float)):
+        return float(x)
+
+    x = str(x).strip().replace(" ", "")
+
+    # format Indonesia
+    if ',' in x and '.' in x:
+        if x.rfind(',') > x.rfind('.'):
+            x = x.replace('.', '').replace(',', '.')
+        else:
+            x = x.replace(',', '')
+    elif ',' in x:
+        x = x.replace(',', '.')
     
     try:
         return float(x)
     except:
-        return 0
+#         return 0
+# def clean_number(x):
+#     if pd.isna(x):
+#         return 0
+    
+#     x = str(x).strip()
+    
+#     # format Indonesia: 1.234.567,89 → 1234567.89
+#     x = x.replace('.', '').replace(',', '.')
+    
+#     try:
+#         return float(x)
+#     except:
+#         return 0
         
 num_cols = [
     'QS_CEDING','SP_CEDING',
