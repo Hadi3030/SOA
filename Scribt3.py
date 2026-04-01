@@ -92,13 +92,16 @@ num_cols = [
     'KLAIM_QS','KLAIM_SP'
 ]
 
+# for col in num_cols:
+#     df[col] = (
+#         df[col].astype(str)
+#         .str.replace('.', '', regex=False)
+#         .str.replace(',', '.', regex=False)
+#     )
+#     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 for col in num_cols:
-    df[col] = (
-        df[col].astype(str)
-        .str.replace('.', '', regex=False)
-        .str.replace(',', '.', regex=False)
-    )
-    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+    if col in df.columns:
+        df[col] = df[col].apply(clean_number)
 
 # ===============================
 # PARSE PROD
