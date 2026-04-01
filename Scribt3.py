@@ -16,13 +16,28 @@ with col2:
 # ===============================
 # UPLOAD
 # ===============================
-file = st.file_uploader("Upload File SOA", type=["xlsx"])
+file = st.file_uploader("Upload File SOA", type=["xlsx","xlsb"])
 if not file:
     st.stop()
 
-excel_file = pd.ExcelFile(file)
+# excel_file = pd.ExcelFile(file)
+# sheet = st.selectbox("Pilih Sheet", excel_file.sheet_names)
+# df = pd.read_excel(excel_file, sheet_name=sheet)
+
+# DETECT FILE TYPE
+if file.name.endswith(".xlsb"):
+    excel_file = pd.ExcelFile(file, engine="pyxlsb")
+else:
+    excel_file = pd.ExcelFile(file)
+
+# PILIH SHEET
 sheet = st.selectbox("Pilih Sheet", excel_file.sheet_names)
-df = pd.read_excel(excel_file, sheet_name=sheet)
+
+# BACA DATA
+if file.name.endswith(".xlsb"):
+    df = pd.read_excel(file, sheet_name=sheet, engine="pyxlsb")
+else:
+    df = pd.read_excel(file, sheet_name=sheet)
 
 # ===============================
 # NORMALISASI KOLOM
@@ -46,6 +61,20 @@ for col in ['CURRENCY', 'COB', 'BROKER']:
         df[col] = df[col].astype(str).str.strip().str.upper()
 
 df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
+
+# ===============================
+# FILTER BROKER
+# ===============================
+st.subheader("Pilih Broker")
+
+if "BROKER" in df.columns:
+    broker_list = sorted(df["BROKER"].dropna().unique().tolist())
+
+    selected_broker = broker_list if st.checkbox("ALL BROKER", True) else [
+        b for b in broker_list if st.checkbox(b)
+    ]
+
+    df = df[df["BROKER"].isin(selected_broker)]
 
 # ===============================
 # FILTER COB
