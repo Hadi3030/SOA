@@ -108,7 +108,7 @@ def clean_number(x):
     try:
         return float(x)
     except:
-#         return 0
+        return 0
 # def clean_number(x):
 #     if pd.isna(x):
 #         return 0
