@@ -161,13 +161,17 @@ def generate_report(df, tipe, zero_option):
         df['COMMISSION'] = df['KOMISI_SP']
         df['CLAIM'] = df['KLAIM_SP']
 
-    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION'] - df['CLAIM']
-
     grouped = (
         df.groupby(['CURRENCY','COB','UY'])
         .sum(numeric_only=True)
         .reset_index()
         .sort_values(['CURRENCY','COB','UY'])
+    )
+    
+    grouped['AMOUNT'] = (
+        grouped['PREMIUM']
+        - grouped['COMMISSION']
+        - grouped['CLAIM']
     )
 
     rows = []
