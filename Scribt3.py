@@ -298,10 +298,16 @@ if st.button("⬇️ Download All Broker"):
         ws['A10'] = "Broker       :"; ws['B10'] = broker_name
 
         # HEADER TABLE
-        for col in "ABCDEFG":
-            cell = ws[f"{col}13"]
+        from openpyxl.styles import Font, PatternFill, Alignment
+
+        header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        
+        for col in range(1, 8):  # kolom A-G
+            cell = ws.cell(row=13, column=col)
             cell.fill = header_fill
-            cell.font = Font(color="FFFFFF", bold=True)
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
 
         current_currency = None
 
