@@ -63,6 +63,20 @@ for col in ['CURRENCY', 'COB', 'BROKER']:
 df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 
 # ===============================
+# HANDLE UY (*)
+# ===============================
+if "UY" in df.columns:
+    df['UY_ORIGINAL'] = df['UY'].astype(str)
+    df['UY_FLAG'] = df['UY_ORIGINAL'].str.contains(r'\*')
+
+    # untuk perhitungan (hapus *)
+    df['UY'] = df['UY_ORIGINAL'].str.replace(r'\*', '', regex=True)
+    df['UY'] = pd.to_numeric(df['UY'], errors='coerce')
+
+    # untuk tampilan
+    df['UY_DISPLAY'] = df['UY_ORIGINAL']
+    
+# ===============================
 # FILTER BROKER
 # ===============================
 st.subheader("Pilih Broker")
@@ -222,10 +236,10 @@ def generate_report(df, tipe, zero_option):
         df['CLAIM'] = df['KLAIM_SP']
 
     grouped = (
-        df.groupby(['CURRENCY','COB','UY'])
+        df.groupby(['CURRENCY','COB','UY','UY_DISPLAY'])
         .sum(numeric_only=True)
         .reset_index()
-        .sort_values(['CURRENCY','COB','UY'])
+        .sort_values(['CURRENCY','COB','UY','UY_DISPLAY'])
     )
     
     grouped['AMOUNT'] = (
@@ -259,7 +273,7 @@ def generate_report(df, tipe, zero_option):
                 rows.append([
                     curr if first_row else "",
                     cob if first_cob_row else "",
-                    r['UY'],
+                    r['UY_DISPLAY'],
                     r['PREMIUM'],
                     r['COMMISSION'],
                     r['CLAIM'],
