@@ -51,7 +51,12 @@ df = df.rename(columns=mapping)
 # ===============================
 for col in ['CURRENCY', 'COB', 'BROKER']:
     if col in df.columns:
-        df[col] = df[col].astype(str).str.strip().str.upper()
+        df[col] = (
+            df[col]
+            .fillna("")          # 🔥 hindari NaN error
+            .astype(str)         # ubah ke string
+        )
+        df[col] = df[col].str.strip().str.upper()
 
 df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 
