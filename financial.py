@@ -353,13 +353,114 @@ grey_fill = PatternFill("solid", fgColor="D9D9D9")
 white_fill = PatternFill("solid", fgColor="FFFFFF")
 no_border = Border()
 
-def write_sheet(writer, data, name, tipe, ref):
+# def write_sheet(writer, data, name, tipe, ref):
 
-    data.to_excel(writer, index=False, sheet_name=name, startrow=12)
-    ws = writer.sheets[name]
+#     data.to_excel(writer, index=False, sheet_name=name, startrow=12)
+#     ws = writer.sheets[name]
 
-        # ===============================
-    # LOGO (optional)
+#         # ===============================
+#     # LOGO (optional)
+#     # ===============================
+#     try:
+#         logo = Image("askrindo.jpg")
+#         logo.height = 60
+#         logo.width = 140
+#         ws.add_image(logo, "A1")
+#     except:
+#         pass
+
+#     # ===============================
+#     # TITLE
+#     # ===============================
+#     ws.merge_cells('A4:G4')
+#     ws['A4'] = "STATEMENT OF ACCOUNT"
+#     ws['A4'].font = Font(bold=True, size=14)
+#     ws['A4'].alignment = Alignment(horizontal='center')
+
+#     ws.merge_cells('A5:G5')
+#     ws['A5'] = f"Ref No. {ref}"
+#     ws['A5'].font = Font(bold=True)
+#     ws['A5'].alignment = Alignment(horizontal='center')
+
+#     # ===============================
+#     # HEADER INFO
+#     # ===============================
+#     ws['A7'] = "Treaty Year  :"; ws['B7'] = year
+#     ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
+#     ws['A9'] = "For Months   :"; ws['B9'] = months_text
+#     ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
+    
+#     # HEADER TABLE
+#     for col in "ABCDEFGH":
+#         cell = ws[f"{col}13"]
+#         cell.fill = header_fill
+#         cell.font = Font(color="FFFFFF", bold=True)
+#         cell.border = no_border
+
+#     current_currency = None
+
+#     for row in range(14, ws.max_row+1):
+
+#         val_curr = ws[f"A{row}"].value
+#         val_cob  = ws[f"B{row}"].value
+
+#         # DEFAULT PUTIH
+#         for col in "ABCDEFGH":
+#             ws[f"{col}{row}"].fill = white_fill
+#             ws[f"{col}{row}"].border = no_border
+
+#         if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFGH"):
+#             current_currency = None
+#             continue
+
+#         # ALIGNMENT
+#         ws[f"A{row}"].alignment = Alignment(horizontal='left')
+#         ws[f"B{row}"].alignment = Alignment(horizontal='left')
+#         ws[f"C{row}"].alignment = Alignment(horizontal='center')
+
+#         # DETECT CURRENCY
+#         if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+#             current_currency = val_curr
+
+#         # KOLOM A GREY
+#         if current_currency:
+#             ws[f"A{row}"].fill = grey_fill
+
+#         # TOTAL CURRENCY FULL GREY
+#         if val_curr and "TOTAL" in str(val_curr):
+#             for col in "ABCDEFGH":
+#                 ws[f"{col}{row}"].fill = grey_fill
+#             current_currency = None
+
+#         # BOLD
+#         ws[f"A{row}"].font = Font(bold=True)
+#         ws[f"B{row}"].font = Font(bold=True)
+
+#         if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
+#             for col in "ABCDEFGH":
+#                 ws[f"{col}{row}"].font = Font(bold=True)
+
+#         # FORMAT ANGKA
+#         for col in ['D','E','F','G','H']:
+#             ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
+
+#     # NOTE
+#     last = ws.max_row + 2
+#     ws[f"A{last}"] = "Note :"
+#     ws[f"B{last}"] = note
+
+def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
+
+    qs_start = 12
+    sp_start = qs_start + len(qs_data) + 15  # jarak ke bawah
+
+    qs_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=qs_start)
+    sp_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=sp_start)
+
+    ws = writer.sheets[sheet_name]
+
+    # ===============================
+    # LOGO ATAS (QS)
     # ===============================
     try:
         logo = Image("askrindo.jpg")
@@ -370,89 +471,65 @@ def write_sheet(writer, data, name, tipe, ref):
         pass
 
     # ===============================
-    # TITLE
+    # TITLE QS
     # ===============================
     ws.merge_cells('A4:G4')
-    ws['A4'] = "STATEMENT OF ACCOUNT"
+    ws['A4'] = "STATEMENT OF ACCOUNT - QS"
     ws['A4'].font = Font(bold=True, size=14)
     ws['A4'].alignment = Alignment(horizontal='center')
 
-    ws.merge_cells('A5:G5')
-    ws['A5'] = f"Ref No. {ref}"
-    ws['A5'].font = Font(bold=True)
-    ws['A5'].alignment = Alignment(horizontal='center')
+    ws['A7'] = "Broker :"
+    ws['B7'] = broker
 
     # ===============================
-    # HEADER INFO
+    # LOGO BAWAH (SP)
     # ===============================
-    ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-    ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
-    ws['A9'] = "For Months   :"; ws['B9'] = months_text
-    ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
-    
-    # HEADER TABLE
-    for col in "ABCDEFGH":
-        cell = ws[f"{col}13"]
-        cell.fill = header_fill
-        cell.font = Font(color="FFFFFF", bold=True)
-        cell.border = no_border
+    try:
+        logo2 = Image("askrindo.jpg")
+        logo2.height = 60
+        logo2.width = 140
+        ws.add_image(logo2, f"A{sp_start-10}")
+    except:
+        pass
 
-    current_currency = None
+    # ===============================
+    # TITLE SP
+    # ===============================
+    title_row = sp_start - 6
 
-    for row in range(14, ws.max_row+1):
+    ws.merge_cells(f'A{title_row}:G{title_row}')
+    ws[f'A{title_row}'] = "STATEMENT OF ACCOUNT - SP"
+    ws[f'A{title_row}'].font = Font(bold=True, size=14)
+    ws[f'A{title_row}'].alignment = Alignment(horizontal='center')
 
-        val_curr = ws[f"A{row}"].value
-        val_cob  = ws[f"B{row}"].value
-
-        # DEFAULT PUTIH
-        for col in "ABCDEFGH":
-            ws[f"{col}{row}"].fill = white_fill
-            ws[f"{col}{row}"].border = no_border
-
-        if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFGH"):
-            current_currency = None
-            continue
-
-        # ALIGNMENT
-        ws[f"A{row}"].alignment = Alignment(horizontal='left')
-        ws[f"B{row}"].alignment = Alignment(horizontal='left')
-        ws[f"C{row}"].alignment = Alignment(horizontal='center')
-
-        # DETECT CURRENCY
-        if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
-            current_currency = val_curr
-
-        # KOLOM A GREY
-        if current_currency:
-            ws[f"A{row}"].fill = grey_fill
-
-        # TOTAL CURRENCY FULL GREY
-        if val_curr and "TOTAL" in str(val_curr):
-            for col in "ABCDEFGH":
-                ws[f"{col}{row}"].fill = grey_fill
-            current_currency = None
-
-        # BOLD
-        ws[f"A{row}"].font = Font(bold=True)
-        ws[f"B{row}"].font = Font(bold=True)
-
-        if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
-            for col in "ABCDEFGH":
-                ws[f"{col}{row}"].font = Font(bold=True)
-
-        # FORMAT ANGKA
-        for col in ['D','E','F','G','H']:
-            ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
-
-    # NOTE
-    last = ws.max_row + 2
-    ws[f"A{last}"] = "Note :"
-    ws[f"B{last}"] = note
+    ws[f"A{title_row+2}"] = "Broker :"
+    ws[f"B{title_row+2}"] = broker
 
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
-    write_sheet(writer, report_qs, "QS Report", "Quota Share", ref_qs)
-    write_sheet(writer, report_sp, "SL Report", "Surplus", ref_sp)
 
+    # ===============================
+    # LOOP BROKER
+    # ===============================
+    if selected_broker == "ALL":
+        broker_loop = df['BROKER'].dropna().unique()
+    else:
+        broker_loop = [selected_broker]
+
+    for broker in broker_loop:
+
+        df_broker = df[df['BROKER'] == broker]
+
+        # report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+        # report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+        write_combined_sheet(
+            writer,
+            report_qs,
+            report_sp,
+            sheet_name=str(broker)[:31],
+            broker=broker
+        )
+        
 st.download_button(
     "⬇️ Download Report",
     data=output.getvalue(),
