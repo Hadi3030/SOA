@@ -27,10 +27,21 @@ if 'product' in df.columns:
     df['cob'] = df['product']
     
 mapping = {
-    'prod':'PROD','cob':'COB','uy':'UY','curr':'CURRENCY',
+    'prod':'PROD',
+    'product':'COB',
+    'cob':'COB',
+    'uy':'UY',
+
+    # 🔥 INI KUNCI NYA
+    'value':'CURRENCY',
+    'curr':'CURRENCY',
+    'currency':'CURRENCY',
+
     'broker':'BROKER',
-    'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP',
-    'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP'   # 🔥 TAMBAHAN
+    'komisi_qs':'KOMISI_QS',
+    'komisi_sp':'KOMISI_SP',
+    'klaim_qs':'KLAIM_QS',
+    'klaim_sp':'KLAIM_SP'
 }
 df = df.rename(columns=mapping)
 
