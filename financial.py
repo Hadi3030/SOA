@@ -322,20 +322,20 @@ def generate_report(df, tipe, zero_option):
 
         # SPASI
         rows.append(["","","","","","",""])
-# ============================
-# GRAND TOTAL
-# ============================
-grand_total = grouped[['PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']].sum()
-        
-rows.append(["", "GRAND TOTAL", "", *grand_total])
-        
-# spasi akhir
-rows.append(["","","","","","",""])        
+    # ============================
+    # GRAND TOTAL
+    # ============================
+    grand_total = grouped[['PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']].sum()
+            
+    rows.append(["", "GRAND TOTAL", "", *grand_total])
+            
+    # spasi akhir
+    rows.append(["","","","","","",""])        
 
-return pd.DataFrame(
-    rows,
-    columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
-)
+    return pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+    )
 report_qs = generate_report(df.copy(), "QS", zero_option)
 report_sp = generate_report(df.copy(), "SP", zero_option)
 
