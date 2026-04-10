@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 st.set_page_config(page_title="SOA Finance Report", layout="wide")
-st.title("📑 SOA Report Generator")
+st.title("📑 SOA Finance Report Generator")
 
 # ===============================
 # UPLOAD
