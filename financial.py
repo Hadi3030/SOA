@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="SOA Report", layout="wide")
+st.set_page_config(page_title="SOA Finance Report", layout="wide")
 st.title("📑 SOA Report Generator")
 
 # ===============================
