@@ -29,7 +29,6 @@ if 'product' in df.columns:
 mapping = {
     'prod':'PROD','cob':'COB','uy':'UY','curr':'CURRENCY',
     'broker':'BROKER',
-    'qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
     'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP',
     'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP'   # 🔥 TAMBAHAN
 }
@@ -181,7 +180,7 @@ def generate_report(df, tipe, zero_option):
         df['COMMISSION'] = df['KOMISI_PANEL_SP']
         df['CLAIM'] = df['KLAIM_PANEL_SP']    
         
-    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION']
+    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION'] - df['CLAIM']
 
     grouped = (
         df.groupby(['CURRENCY','COB','UY'])
