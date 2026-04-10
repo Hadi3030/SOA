@@ -602,9 +602,6 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
-    # ===============================
-    # LOOP BROKER
-    # ===============================
     if selected_broker == "ALL":
         broker_loop = df['BROKER'].dropna().unique()
     else:
@@ -614,8 +611,9 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
         df_broker = df[df['BROKER'] == broker]
 
-        # report_qs = generate_report(df_broker.copy(), "QS", zero_option)
-        # report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+        # 🔥 INI WAJIB PER BROKER
+        report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+        report_sp = generate_report(df_broker.copy(), "SP", zero_option)
 
         write_combined_sheet(
             writer,
