@@ -33,7 +33,8 @@ mapping = {
     'uy':'UY',
 
     # 🔥 INI KUNCI NYA
-    'value':'CURRENCY',
+    # 'value':'CURRENCY',
+    'valuta':'CURRENCY',
     'curr':'CURRENCY',
     'currency':'CURRENCY',
 
