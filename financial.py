@@ -251,11 +251,6 @@ elif mode == "Laporan SOA (SOA Report)":
 
     st.dataframe(df)
 
-    report = generate_report(df)
-
-    st.subheader("Report SOA")
-    st.dataframe(report)
-
     st.subheader("📝 Informasi Laporan")
     ref_no = st.text_input("Ref No", value="")
     treaty_year = st.text_input("Treaty Year", value="2026")
@@ -274,6 +269,13 @@ elif mode == "Laporan SOA (SOA Report)":
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
     
         df.columns = df.columns.str.upper()
+        cols = [
+            'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS',
+            'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP'
+        ]
+        
+        for col in cols:
+            df[col] = pd.to_numeric(df.get(col, 0), errors='coerce').fillna(0)
     
         # ======================
         # MAPPING PRODUCT → COB
