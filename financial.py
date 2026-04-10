@@ -152,6 +152,12 @@ def get_quarter(m):
 
 quarter = get_quarter(max_m)
 
+required_cols = ['CURRENCY','COB','UY']
+missing = [c for c in required_cols if c not in df.columns]
+
+if missing:
+    st.error(f"Kolom wajib tidak ditemukan: {missing}")
+    st.stop()
 # ===============================
 # GENERATE REPORT
 # ===============================
