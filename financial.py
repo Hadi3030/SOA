@@ -2,6 +2,13 @@ import streamlit as st
 import pandas as pd
 import io
 
+def format_quarter_text(q):
+    mapping = {
+        "SP": "Surplus",
+        "QS": "Quota Share"
+    }
+    return mapping.get(q, q)
+
 st.set_page_config(page_title="SOA Finance Report", layout="wide")
 st.title("📑 SOA Finance Report Generator")
 
@@ -174,14 +181,24 @@ df = df.dropna(subset=['MONTH','YEAR'])
 # ===============================
 # DATE INFO
 # ===============================
-month_map = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
-             7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
+month_full = {
+    1:'January',2:'February',3:'March',4:'April',
+    5:'May',6:'June',7:'July',8:'August',
+    9:'September',10:'October',11:'November',12:'December'
+}
 
 min_m = int(df['MONTH'].min())
 max_m = int(df['MONTH'].max())
 year = int(df['YEAR'].mode()[0])
+months_text = f"{month_full[min_m]} {year} - {month_full[max_m]} {year}"
+# month_map = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
+#              7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
 
-months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
+# min_m = int(df['MONTH'].min())
+# max_m = int(df['MONTH'].max())
+# year = int(df['YEAR'].mode()[0])
+
+# months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
 def get_quarter(m):
     return ["I","II","III","IV"][(m-1)//3]
@@ -362,102 +379,6 @@ grey_fill = PatternFill("solid", fgColor="D9D9D9")
 white_fill = PatternFill("solid", fgColor="FFFFFF")
 no_border = Border()
 
-# def write_sheet(writer, data, name, tipe, ref):
-
-#     data.to_excel(writer, index=False, sheet_name=name, startrow=12)
-#     ws = writer.sheets[name]
-
-#         # ===============================
-#     # LOGO (optional)
-#     # ===============================
-#     try:
-#         logo = Image("askrindo.jpg")
-#         logo.height = 60
-#         logo.width = 140
-#         ws.add_image(logo, "A1")
-#     except:
-#         pass
-
-#     # ===============================
-#     # TITLE
-#     # ===============================
-#     ws.merge_cells('A4:G4')
-#     ws['A4'] = "STATEMENT OF ACCOUNT"
-#     ws['A4'].font = Font(bold=True, size=14)
-#     ws['A4'].alignment = Alignment(horizontal='center')
-
-#     ws.merge_cells('A5:G5')
-#     ws['A5'] = f"Ref No. {ref}"
-#     ws['A5'].font = Font(bold=True)
-#     ws['A5'].alignment = Alignment(horizontal='center')
-
-#     # ===============================
-#     # HEADER INFO
-#     # ===============================
-#     ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-#     ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
-#     ws['A9'] = "For Months   :"; ws['B9'] = months_text
-#     ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
-    
-#     # HEADER TABLE
-#     for col in "ABCDEFGH":
-#         cell = ws[f"{col}13"]
-#         cell.fill = header_fill
-#         cell.font = Font(color="FFFFFF", bold=True)
-#         cell.border = no_border
-
-#     current_currency = None
-
-#     for row in range(14, ws.max_row+1):
-
-#         val_curr = ws[f"A{row}"].value
-#         val_cob  = ws[f"B{row}"].value
-
-#         # DEFAULT PUTIH
-#         for col in "ABCDEFGH":
-#             ws[f"{col}{row}"].fill = white_fill
-#             ws[f"{col}{row}"].border = no_border
-
-#         if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFGH"):
-#             current_currency = None
-#             continue
-
-#         # ALIGNMENT
-#         ws[f"A{row}"].alignment = Alignment(horizontal='left')
-#         ws[f"B{row}"].alignment = Alignment(horizontal='left')
-#         ws[f"C{row}"].alignment = Alignment(horizontal='center')
-
-#         # DETECT CURRENCY
-#         if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
-#             current_currency = val_curr
-
-#         # KOLOM A GREY
-#         if current_currency:
-#             ws[f"A{row}"].fill = grey_fill
-
-#         # TOTAL CURRENCY FULL GREY
-#         if val_curr and "TOTAL" in str(val_curr):
-#             for col in "ABCDEFGH":
-#                 ws[f"{col}{row}"].fill = grey_fill
-#             current_currency = None
-
-#         # BOLD
-#         ws[f"A{row}"].font = Font(bold=True)
-#         ws[f"B{row}"].font = Font(bold=True)
-
-#         if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
-#             for col in "ABCDEFGH":
-#                 ws[f"{col}{row}"].font = Font(bold=True)
-
-#         # FORMAT ANGKA
-#         for col in ['D','E','F','G','H']:
-#             ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
-
-#     # NOTE
-#     last = ws.max_row + 2
-#     ws[f"A{last}"] = "Note :"
-#     ws[f"B{last}"] = note
-
 def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp):
 
     qs_start = 12
@@ -495,9 +416,8 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     ws['A5'].alignment = Alignment(horizontal='center')
     
     ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-    ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} QS"
-    ws['A9'] = "For Months   :"; ws['B9'] = months_text
-    ws['A10'] = "Broker       :"; ws['B10'] = broker
+    ws['B8'] = f"{quarter} {format_quarter_text('QS')}"
+    ws[f"B{title_row+4}"] = f"{quarter} {format_quarter_text('SP')}"
     
 
     # ===============================
