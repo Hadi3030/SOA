@@ -383,6 +383,7 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
 
     qs_start = 12
     sp_start = qs_start + len(qs_data) + 15
+    title_row = sp_start - 6
 
     qs_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=qs_start)
     sp_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=sp_start)
@@ -423,7 +424,7 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     # ===============================
     # TITLE SP
     # ===============================
-    title_row = sp_start - 6
+   
 
     ws.merge_cells(f'A{title_row}:G{title_row}')
     ws[f'A{title_row}'] = "STATEMENT OF ACCOUNT - SP"
