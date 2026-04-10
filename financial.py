@@ -2,372 +2,396 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="SOA Processing", layout="wide")
+st.set_page_config(page_title="SOA Report", layout="wide")
+st.title("📑 SOA Report Generator")
 
 # ===============================
-# SIDEBAR MENU
+# UPLOAD
 # ===============================
-st.sidebar.title("📌 Menu")
+file = st.file_uploader("Upload File SOA", type=["xlsx"])
+if not file:
+    st.stop()
 
-mode = st.sidebar.radio(
-    "Pilih Analisis",
-    ["Spreading Data (SOA Processing)", "Laporan SOA (SOA Report)"]
+excel_file = pd.ExcelFile(file)
+sheet = st.selectbox("Pilih Sheet", excel_file.sheet_names)
+df = pd.read_excel(excel_file, sheet_name=sheet)
+
+# ===============================
+# NORMALISASI KOLOM
+# ===============================
+df.columns = df.columns.str.strip().str.lower()
+# ===============================
+# MAPPING PRODUCT → COB
+# ===============================
+if 'product' in df.columns:
+    df['cob'] = df['product']
+    
+mapping = {
+    'prod':'PROD','cob':'COB','uy':'UY','curr':'CURRENCY',
+    'broker':'BROKER',
+    'qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
+    'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP',
+    'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP'   # 🔥 TAMBAHAN
+}
+df = df.rename(columns=mapping)
+
+
+# ===============================
+# FIX TEXT
+# ===============================
+for col in ['CURRENCY', 'COB', 'BROKER']:
+    if col in df.columns:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
+
+# ===============================
+# FILTER COB
+# ===============================
+# ===============================
+# FILTER COB (CHECKBOX)
+# ===============================
+st.subheader("Pilih COB")
+
+if "COB" in df.columns:
+    cob_list = sorted(df["COB"].dropna().unique().tolist())
+
+    selected_cob = []
+
+    all_cob = st.checkbox("ALL COB", value=True)
+
+    if all_cob:
+        selected_cob = cob_list
+    else:
+        cols = st.columns(3)  # biar rapi grid
+        for i, cob in enumerate(cob_list):
+            if cols[i % 3].checkbox(cob):
+                selected_cob.append(cob)
+
+    if selected_cob:
+        df = df[df["COB"].isin(selected_cob)]
+    else:
+        st.warning("Pilih minimal 1 COB")
+        st.stop()
+
+# ===============================
+# FILTER UW YEAR (CHECKBOX)
+# ===============================
+st.subheader("Pilih UW Year")
+
+if "UY" in df.columns:
+    uy_list = sorted(df["UY"].dropna().unique().tolist())
+
+    selected_uy = []
+
+    all_uy = st.checkbox("ALL UW YEAR", value=True)
+
+    if all_uy:
+        selected_uy = uy_list
+    else:
+        cols = st.columns(4)
+        for i, uy in enumerate(uy_list):
+            if cols[i % 4].checkbox(str(uy)):
+                selected_uy.append(uy)
+
+    if selected_uy:
+        df = df[df["UY"].isin(selected_uy)]
+    else:
+        st.warning("Pilih minimal 1 UW Year")
+        st.stop()
+        
+# ===============================
+# FILTER
+# ===============================
+broker_list = df['BROKER'].dropna().unique().tolist()
+broker_list.insert(0, "ALL")
+selected_broker = st.selectbox("Pilih Broker", broker_list)
+
+if selected_broker != "ALL":
+    df = df[df['BROKER'] == selected_broker]
+
+lt_option = st.selectbox("Filter Long Term", ["ALL", "LT", "NON-LT"])
+
+if lt_option != "ALL":
+    if lt_option == "LT":
+        df = df[df['COB'].str.contains("LT", na=False)]
+    else:
+        df = df[~df['COB'].str.contains("LT", na=False)]
+
+zero_option = st.selectbox(
+    "Tampilkan Baris Nol",
+    ["Show All", "Hide Zero Rows"]
 )
 
 # ===============================
-# SESSION STATE
+# PARSE PROD
 # ===============================
-if "result_data" not in st.session_state:
-    st.session_state["result_data"] = None
+def parse_prod(x):
+    try:
+        x = str(x)
+        return int(x[:4]), int(x[-2:])
+    except:
+        return None, None
 
-# ===============================
-# FUNCTION PROCESSING
-# ===============================
-def process_data(df1, df2):
-
-    df1.columns = df1.columns.str.strip()
-    df2.columns = df2.columns.str.strip()
-
-    df1['QS'] = pd.to_numeric(df1['QS'], errors='coerce').fillna(0)
-    df1['SPL'] = pd.to_numeric(df1['SPL'], errors='coerce').fillna(0)
-    df1 = df1[~((df1['QS'] == 0) & (df1['SPL'] == 0))]
-    df1['COB'] = df1['COB'].astype(str).str.strip().str.upper()
-
-    cols_convert = ['TSI SHARE','OR','QS','SPL']
-    for col in cols_convert:
-        df1[col] = pd.to_numeric(df1[col], errors='coerce')
-
-    df1['UY-COB'] = df1['UY'].astype(str) + "-" + df1['COB']
-
-    df2.columns = df2.columns.str.lower()
-    df2['uy'] = df2['uy'].astype(str).str.strip()
-
-    for col in ['broker','cob','group']:
-        df2[col] = df2[col].astype(str).str.strip().str.upper()
-
-    def percent_to_decimal(x):
-        if pd.isna(x):
-            return 0
-        if isinstance(x, str):
-            x = x.replace('%','').strip()
-            val = pd.to_numeric(x, errors='coerce')
-            return val / 100 if val is not None else 0
-        if isinstance(x, (int,float)):
-            if x > 1:
-                return x / 100
-        return x
-
-    df2['sharere']  = df2['sharere'].apply(percent_to_decimal)
-    df2['komisiqs'] = df2['komisiqs'].apply(percent_to_decimal)
-    df2['komisisp'] = df2['komisisp'].apply(percent_to_decimal)
-
-    # MERGE
-    merged = df1.merge(
-        df2,
-        left_on=['UY','COB'],
-        right_on=['uy','cob'],
-        how='left'
-    )
-
-    # SPREAD 2023
-    found = merged[merged['broker'].notna()].copy()
-    missing = merged[merged['broker'].isna()].copy()
-
-    df2_2023 = df2[df2['uy'] == '2023'].copy()
-
-    missing_expanded = missing.drop(columns=df2.columns, errors='ignore').merge(
-        df2_2023,
-        left_on='COB',
-        right_on='cob',
-        how='left'
-    )
-
-    merged = pd.concat([found, missing_expanded], ignore_index=True)
-
-    merged = merged.drop(columns=['cob','uy'], errors='ignore')
-
-    cols = ['QS','SPL','sharere','komisiqs','komisisp']
-    for c in cols:
-        merged[c] = pd.to_numeric(merged[c], errors='coerce').fillna(0)
-
-    merged['qs_ceding'] = merged['QS'] * merged['sharere']
-    merged['komisi_qs'] = merged['qs_ceding'] * merged['komisiqs']
-
-    merged['sp_ceding'] = merged['SPL'] * merged['sharere']
-    merged['komisi_sp'] = merged['sp_ceding'] * merged['komisisp']
-
-    # ✅ FIX DUPLICATE COLUMN (PENTING BANGET)
-    merged = merged.loc[:, ~merged.columns.duplicated()]
-
-    # ✅ RAPIIKAN KOLOM
-    merged.columns = merged.columns.str.strip().str.upper()
-
-    return merged
+df[['YEAR','MONTH']] = df['PROD'].apply(lambda x: pd.Series(parse_prod(x)))
+df = df.dropna(subset=['YEAR','MONTH'])
 
 # ===============================
-# FUNCTION TOTAL
+# DATE INFO
 # ===============================
-def add_total_row(df):
-    numeric_cols = df.select_dtypes(include='number').columns
-    total = df[numeric_cols].sum()
-    total_df = pd.DataFrame([total])
-    total_df.index = ['TOTAL']
-    return total_df
+month_map = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
+             7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
+
+min_m = int(df['MONTH'].min())
+max_m = int(df['MONTH'].max())
+year = int(df['YEAR'].mode()[0])
+
+months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
+
+def get_quarter(m):
+    return ["I","II","III","IV"][(m-1)//3]
+
+quarter = get_quarter(max_m)
 
 # ===============================
-# FUNCTION REPORT
+# GENERATE REPORT
 # ===============================
-def generate_report(df):
+def generate_report(df, tipe, zero_option):
 
-    df.columns = df.columns.str.strip().str.upper()
-    df_qs = df.copy()
-    df_qs['TYPE'] = 'QS'
-    df_qs['PREMIUM'] = df.get('PREMI_PANEL_QS', 0)
-    df_qs['COMMISSION'] = df.get('KOMISI_PANEL_QS', 0)
+    # ===============================
+    # AMBIL DATA FINANCIAL
+    # ===============================
+    cols = [
+        'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS',
+        'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP'
+    ]
     
-    df_sp = df.copy()
-    df_sp['TYPE'] = 'SP'
-    df_sp['PREMIUM'] = df.get('PREMI_PANEL_SP', 0)
-    df_sp['COMMISSION'] = df.get('KOMISI_PANEL_SP', 0)
+    for col in cols:
+        df[col] = pd.to_numeric(df.get(col, 0), errors='coerce').fillna(0)
     
-    df_all = pd.concat([df_qs, df_sp])
-
-    # Mapping PRODUCT → COB
-    if 'PRODUCT' in df.columns:
-        df['COB'] = df['PRODUCT']
-
-    required_cols = ['CURRENCY','COB','UY','QS','SPL','KOMISI_QS','KOMISI_SP']
-    missing = [c for c in required_cols if c not in df.columns]
-
-    if missing:
-        st.error(f"Kolom tidak ditemukan: {missing}")
-        st.stop()
-
-    df['PREMIUM'] = (
-        df.get('PREMI_PANEL_QS', 0) +
-        df.get('PREMI_PANEL_SP', 0)
-    )
-    
-    df['COMMISSION'] = (
-        df.get('KOMISI_PANEL_QS', 0) +
-        df.get('KOMISI_PANEL_SP', 0)
-    )
-    
-    df['CLAIM'] = (
-        df.get('KLAIM_PANEL_QS', 0) +
-        df.get('KLAIM_PANEL_SP', 0)
-    )
-    
-    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION'] - df['CLAIM']
-
-    grouped = df.groupby(['CURRENCY','COB','UY']).agg({
-        'PREMIUM':'sum',
-        'COMMISSION':'sum',
-        'CLAIM':'sum',
-        'AMOUNT':'sum'
-    }).reset_index()
-
-    final_rows = []
-
-    for curr in grouped['CURRENCY'].unique():
-        df_curr = grouped[grouped['CURRENCY'] == curr]
-
-        for cob in df_curr['COB'].unique():
-            df_cob = df_curr[df_curr['COB'] == cob]
-
-            for _, row in df_cob.iterrows():
-                final_rows.append([
-                    curr, cob, row['UY'],
-                    row['PREMIUM'], row['COMMISSION'],
-                    row['CLAIM'], row['AMOUNT']
-                ])
-
-            total = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-            final_rows.append(["", f"{cob} TOTAL", "", *total])
-
-        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
-        final_rows.append([f"{curr} TOTAL","","", *total_curr])
-
-    return pd.DataFrame(final_rows,
-        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT'])
-
-# ===============================
-# MODE 1
-# ===============================
-if mode == "Spreading Data (SOA Processing)":
-
-    st.title("📊 SOA Processing")
-
-    file_soa = st.file_uploader("Upload Data SOA", type=["xlsx"])
-    file_sor = st.file_uploader("Upload SOR Summary", type=["xlsx"])
-
-    if file_soa and file_sor:
-
-        df1 = pd.read_excel(file_soa)
-        df2 = pd.read_excel(file_sor)
-
-        st.subheader("Data SOA")
-        st.dataframe(df1)
-
-        result = process_data(df1.copy(), df2.copy())
-
-        st.subheader("Hasil Processing")
-        st.dataframe(result)
-
-        st.session_state["result_data"] = result
-
-        st.subheader("Total SOA")
-        st.dataframe(add_total_row(df1))
-
-        st.subheader("Total Output")
-        st.dataframe(add_total_row(result))
-
-        file_name_input = st.text_input("Nama file", value="SOA_Result")
-
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            result.to_excel(writer, index=False)
-
-        final_filename = file_name_input.strip() or "SOA_Result"
-
-        st.download_button(
-            "⬇️ Download",
-            data=output.getvalue(),
-            file_name=f"{final_filename}.xlsx"
-        )
-
-# ===============================
-# MODE 2
-# ===============================
-elif mode == "Laporan SOA (SOA Report)":
-
-    st.title("📑 SOA Report")
-
-    file = st.file_uploader("Upload hasil SOA", type=["xlsx"])
-    if not file:
-        st.stop()
-
-    df = pd.read_excel(file)
-
-    st.dataframe(df)
-
-    st.subheader("📝 Informasi Laporan")
-    ref_no = st.text_input("Ref No", value="")
-    treaty_year = st.text_input("Treaty Year", value="2026")
-    quarter = st.text_input("Quarter", value="Q1")
-    months = st.text_input("For Months", value="Jan - Mar")
-    remarks = st.text_input("Remarks", value="-")
-
-    file_name_input = st.text_input("Nama file report", value="SOA_Report")
-
-    output = io.BytesIO()
-
-    from openpyxl.styles import Font, Alignment
-    from openpyxl.drawing.image import Image
-    from openpyxl.utils import get_column_letter
-
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-    
-        df.columns = df.columns.str.upper()
-        cols = [
-            'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS',
-            'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP'
-        ]
+    # ===============================
+    # PILIH TIPE
+    # ===============================
+    if tipe == "QS":
+        df['PREMIUM'] = df['PREMI_PANEL_QS']
+        df['COMMISSION'] = df['KOMISI_PANEL_QS']
+        df['CLAIM'] = df['KLAIM_PANEL_QS']
+    else:
+        df['PREMIUM'] = df['PREMI_PANEL_SP']
+        df['COMMISSION'] = df['KOMISI_PANEL_SP']
+        df['CLAIM'] = df['KLAIM_PANEL_SP']    
         
-        for col in cols:
-            df[col] = pd.to_numeric(df.get(col, 0), errors='coerce').fillna(0)
-    
-        # ======================
-        # MAPPING PRODUCT → COB
-        # ======================
-        if 'PRODUCT' in df.columns:
-            df['COB'] = df['PRODUCT']
-    
-        # ======================
-        # QS
-        # ======================
-        df_qs = df.copy()
-        df_qs['PREMIUM'] = df_qs.get('PREMI_PANEL_QS', 0)
-        df_qs['COMMISSION'] = df_qs.get('KOMISI_PANEL_QS', 0)
-        df_qs['CLAIM'] = df_qs.get('KLAIM_PANEL_QS', 0)
-        df_qs['AMOUNT'] = df_qs['PREMIUM'] - df_qs['COMMISSION'] - df_qs['CLAIM']
-    
-        report_qs = df_qs.groupby(['CURRENCY','COB','UY']).agg({
-            'PREMIUM':'sum',
-            'COMMISSION':'sum',
-            'CLAIM':'sum',
-            'AMOUNT':'sum'
-        }).reset_index()
-    
-        # ======================
-        # SP
-        # ======================
-        df_sp = df.copy()
-        df_sp['PREMIUM'] = df_sp.get('PREMI_PANEL_SP', 0)
-        df_sp['COMMISSION'] = df_sp.get('KOMISI_PANEL_SP', 0)
-        df_sp['CLAIM'] = df_sp.get('KLAIM_PANEL_SP', 0)
-        df_sp['AMOUNT'] = df_sp['PREMIUM'] - df_sp['COMMISSION'] - df_sp['CLAIM']
-    
-        report_sp = df_sp.groupby(['CURRENCY','COB','UY']).agg({
-            'PREMIUM':'sum',
-            'COMMISSION':'sum',
-            'CLAIM':'sum',
-            'AMOUNT':'sum'
-        }).reset_index()
-    
-        # ======================
-        # TULIS KE EXCEL
-        # ======================
-        sheet_name = 'SOA Report'
-    
-        report_qs.to_excel(writer, index=False, sheet_name=sheet_name, startrow=9)
-    
-        start_sp = len(report_qs) + 15
-        report_sp.to_excel(writer, index=False, sheet_name=sheet_name, startrow=start_sp)
-    
-        ws = writer.sheets[sheet_name]
-        ws['A9'] = "QUOTA SHARE"
-        ws[f"A{start_sp}"] = "SURPLUS"
+    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION']
 
-        try:
-            logo = Image("askrindo.jpg")
-            logo.width = 120
-            logo.height = 60
-            ws.add_image(logo, "A1")
-        except:
-            pass
-
-        ws.merge_cells('A2:G2')
-        ws['A2'] = "STATEMENT OF ACCOUNT"
-        ws['A2'].font = Font(bold=True, size=14)
-        ws['A2'].alignment = Alignment(horizontal='center')
-
-        ws.merge_cells('A3:G3')
-        ws['A3'] = f"Ref No. {ref_no}"
-        ws['A3'].alignment = Alignment(horizontal='center')
-
-        ws['A5'] = f"Treaty Year : {treaty_year}"
-        ws['A6'] = f"Quarter     : {quarter}"
-        ws['A7'] = f"For Months  : {months}"
-        ws['A8'] = f"Remarks     : {remarks}"
-
-        number_format = '#,##0.00;[Red](#,##0.00)'
-        for col in ['D','E','F','G']:
-            for row in range(10, ws.max_row + 1):
-                ws[f"{col}{row}"].number_format = number_format
-
-        for col in ws.columns:
-            max_length = 0
-            col_letter = get_column_letter(col[0].column)
-            for cell in col:
-                if cell.value:
-                    max_length = max(max_length, len(str(cell.value)))
-            ws.column_dimensions[col_letter].width = max_length + 2
-
-    final_filename = file_name_input.strip() or "SOA_Report"
-
-    st.download_button(
-        "⬇️ Download Report",
-        data=output.getvalue(),
-        file_name=f"{final_filename}.xlsx"
+    grouped = (
+        df.groupby(['CURRENCY','COB','UY'])
+        .sum(numeric_only=True)
+        .reset_index()
+        .sort_values(['CURRENCY','COB','UY'])
     )
+
+    rows = []
+
+    # ============================
+    # LOOP CURRENCY
+    # ============================
+    for curr, df_curr in grouped.groupby('CURRENCY'):
+
+        # 🔥 FILTER ZERO (LEVEL CURRENCY)
+        if zero_option == "Hide Zero Rows":
+            df_curr = df_curr[
+                ~(
+                    (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                    .all(axis=1)
+                )
+            ]
+
+        if df_curr.empty:
+            continue
+
+        first_row = True
+
+        # ============================
+        # LOOP COB
+        # ============================
+        for cob, df_cob in df_curr.groupby('COB'):
+
+            # 🔥 FILTER ZERO (LEVEL COB)
+            if zero_option == "Hide Zero Rows":
+                df_cob = df_cob[
+                    ~(
+                        (df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                        .all(axis=1)
+                    )
+                ]
+
+            if df_cob.empty:
+                continue
+            first_cob_row = True   # 🔥 TAMBAHAN
+            
+            # ============================
+            # DETAIL ROW
+            # ============================
+            for _, r in df_cob.iterrows():
+                rows.append([
+                    curr if first_row else "",
+                    cob if first_cob_row else "",
+                    r['UY'],
+                    r['PREMIUM'],
+                    r['COMMISSION'],
+                    r['CLAIM'],
+                    r['AMOUNT']
+                ])
+                first_row = False
+                first_cob_row = False
+
+            # ============================
+            # SUBTOTAL COB
+            # ============================
+            subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+            rows.append(["", f"{cob} TOTAL", "", *subtotal])
+
+        # ============================
+        # TOTAL CURRENCY
+        # ============================
+        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+        rows.append([f"{curr} TOTAL","","", *total_curr])
+
+        # SPASI
+        rows.append(["","","","","","",""])
+
+    return pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT']
+    )
+report_qs = generate_report(df.copy(), "QS", zero_option)
+report_sp = generate_report(df.copy(), "SP", zero_option)
+
+st.dataframe(report_qs)
+
+# ===============================
+# INPUT
+# ===============================
+ref_qs = st.text_input("Ref No QS")
+ref_sp = st.text_input("Ref No SL")
+note = st.text_area("Note")
+file_name = st.text_input("Nama file", value="SOA_Report")
+
+# ===============================
+# EXPORT
+# ===============================
+output = io.BytesIO()
+
+from openpyxl.styles import Font, Alignment, PatternFill, Border
+from openpyxl.drawing.image import Image
+
+header_fill = PatternFill("solid", fgColor="000000")
+grey_fill = PatternFill("solid", fgColor="D9D9D9")
+white_fill = PatternFill("solid", fgColor="FFFFFF")
+no_border = Border()
+
+def write_sheet(writer, data, name, tipe, ref):
+
+    data.to_excel(writer, index=False, sheet_name=name, startrow=12)
+    ws = writer.sheets[name]
+
+        # ===============================
+    # LOGO (optional)
+    # ===============================
+    try:
+        logo = Image("askrindo.jpg")
+        logo.height = 60
+        logo.width = 140
+        ws.add_image(logo, "A1")
+    except:
+        pass
+
+    # ===============================
+    # TITLE
+    # ===============================
+    ws.merge_cells('A4:G4')
+    ws['A4'] = "STATEMENT OF ACCOUNT"
+    ws['A4'].font = Font(bold=True, size=14)
+    ws['A4'].alignment = Alignment(horizontal='center')
+
+    ws.merge_cells('A5:G5')
+    ws['A5'] = f"Ref No. {ref}"
+    ws['A5'].font = Font(bold=True)
+    ws['A5'].alignment = Alignment(horizontal='center')
+
+    # ===============================
+    # HEADER INFO
+    # ===============================
+    ws['A7'] = "Treaty Year  :"; ws['B7'] = year
+    ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
+    ws['A9'] = "For Months   :"; ws['B9'] = months_text
+    ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
+    
+    # HEADER TABLE
+    for col in "ABCDEFG":
+        cell = ws[f"{col}13"]
+        cell.fill = header_fill
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.border = no_border
+
+    current_currency = None
+
+    for row in range(14, ws.max_row+1):
+
+        val_curr = ws[f"A{row}"].value
+        val_cob  = ws[f"B{row}"].value
+
+        # DEFAULT PUTIH
+        for col in "ABCDEFG":
+            ws[f"{col}{row}"].fill = white_fill
+            ws[f"{col}{row}"].border = no_border
+
+        if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFG"):
+            current_currency = None
+            continue
+
+        # ALIGNMENT
+        ws[f"A{row}"].alignment = Alignment(horizontal='left')
+        ws[f"B{row}"].alignment = Alignment(horizontal='left')
+        ws[f"C{row}"].alignment = Alignment(horizontal='center')
+
+        # DETECT CURRENCY
+        if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+            current_currency = val_curr
+
+        # KOLOM A GREY
+        if current_currency:
+            ws[f"A{row}"].fill = grey_fill
+
+        # TOTAL CURRENCY FULL GREY
+        if val_curr and "TOTAL" in str(val_curr):
+            for col in "ABCDEFG":
+                ws[f"{col}{row}"].fill = grey_fill
+            current_currency = None
+
+        # BOLD
+        ws[f"A{row}"].font = Font(bold=True)
+        ws[f"B{row}"].font = Font(bold=True)
+
+        if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
+            for col in "ABCDEFG":
+                ws[f"{col}{row}"].font = Font(bold=True)
+
+        # FORMAT ANGKA
+        for col in ['D','E','F','G']:
+            ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
+
+    # NOTE
+    last = ws.max_row + 2
+    ws[f"A{last}"] = "Note :"
+    ws[f"B{last}"] = note
+
+with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    write_sheet(writer, report_qs, "QS Report", "Quota Share", ref_qs)
+    write_sheet(writer, report_sp, "SL Report", "Surplus", ref_sp)
+
+st.download_button(
+    "⬇️ Download Report",
+    data=output.getvalue(),
+    file_name=f"{file_name}.xlsx"
+)
