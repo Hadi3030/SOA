@@ -23,8 +23,8 @@ df.columns = df.columns.str.strip().str.lower()
 # ===============================
 # MAPPING PRODUCT → COB
 # ===============================
-if 'product' in df.columns:
-    df['cob'] = df['product']
+# if 'product' in df.columns:
+#     df['cob'] = df['product']
     
 mapping = {
     'prod':'PROD',
