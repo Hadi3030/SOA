@@ -452,7 +452,7 @@ no_border = Border()
 def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
 
     qs_start = 12
-    sp_start = qs_start + len(qs_data) + 15  # jarak ke bawah
+    sp_start = qs_start + len(qs_data) + 15
 
     qs_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=qs_start)
     sp_data.to_excel(writer, index=False, sheet_name=sheet_name, startrow=sp_start)
@@ -460,7 +460,7 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
     ws = writer.sheets[sheet_name]
 
     # ===============================
-    # LOGO ATAS (QS)
+    # LOGO QS
     # ===============================
     try:
         logo = Image("askrindo.jpg")
@@ -482,17 +482,6 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
     ws['B7'] = broker
 
     # ===============================
-    # LOGO BAWAH (SP)
-    # ===============================
-    try:
-        logo2 = Image("askrindo.jpg")
-        logo2.height = 60
-        logo2.width = 140
-        ws.add_image(logo2, f"A{sp_start-10}")
-    except:
-        pass
-
-    # ===============================
     # TITLE SP
     # ===============================
     title_row = sp_start - 6
@@ -505,6 +494,93 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
     ws[f"A{title_row+2}"] = "Broker :"
     ws[f"B{title_row+2}"] = broker
 
+    # ===============================
+    # LOGO SP
+    # ===============================
+    try:
+        logo2 = Image("askrindo.jpg")
+        logo2.height = 60
+        logo2.width = 140
+        ws.add_image(logo2, f"A{sp_start-10}")
+    except:
+        pass
+
+    # ===============================
+    # FUNCTION STYLING
+    # ===============================
+    def apply_style(start_row, end_row):
+
+        # HEADER TABLE
+        for col in "ABCDEFGH":
+            cell = ws[f"{col}{start_row+1}"]
+            cell.fill = header_fill
+            cell.font = Font(color="FFFFFF", bold=True)
+            cell.border = no_border
+
+        current_currency = None
+
+        for row in range(start_row+2, end_row+1):
+
+            val_curr = ws[f"A{row}"].value
+            val_cob  = ws[f"B{row}"].value
+
+            # default putih
+            for col in "ABCDEFGH":
+                ws[f"{col}{row}"].fill = white_fill
+                ws[f"{col}{row}"].border = no_border
+
+            # skip baris kosong
+            if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFGH"):
+                current_currency = None
+                continue
+
+            # alignment
+            ws[f"A{row}"].alignment = Alignment(horizontal='left')
+            ws[f"B{row}"].alignment = Alignment(horizontal='left')
+            ws[f"C{row}"].alignment = Alignment(horizontal='center')
+
+            # detect currency
+            if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+                current_currency = val_curr
+
+            # kolom A grey
+            if current_currency:
+                ws[f"A{row}"].fill = grey_fill
+
+            # TOTAL ROW FULL GREY + BOLD
+            if (val_curr and "TOTAL" in str(val_curr)) or (val_cob and "TOTAL" in str(val_cob)):
+                for col in "ABCDEFGH":
+                    ws[f"{col}{row}"].fill = grey_fill
+                    ws[f"{col}{row}"].font = Font(bold=True)
+                current_currency = None
+
+            # bold kolom A & B
+            ws[f"A{row}"].font = Font(bold=True)
+            ws[f"B{row}"].font = Font(bold=True)
+
+            # format angka (kurung merah otomatis)
+            for col in ['D','E','F','G','H']:
+                ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
+
+    # ===============================
+    # APPLY STYLE QS
+    # ===============================
+    qs_end = qs_start + len(qs_data) + 1
+    apply_style(qs_start, qs_end)
+
+    # ===============================
+    # APPLY STYLE SP
+    # ===============================
+    sp_end = sp_start + len(sp_data) + 1
+    apply_style(sp_start, sp_end)
+
+    # ===============================
+    # NOTE
+    # ===============================
+    last = ws.max_row + 2
+    ws[f"A{last}"] = "Note :"
+    ws[f"B{last}"] = note
+    
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
     # ===============================
