@@ -449,7 +449,7 @@ no_border = Border()
 #     ws[f"A{last}"] = "Note :"
 #     ws[f"B{last}"] = note
 
-def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
+def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp):
 
     qs_start = 12
     sp_start = qs_start + len(qs_data) + 15
@@ -480,6 +480,16 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
 
     ws['A7'] = "Broker :"
     ws['B7'] = broker
+    ws.merge_cells('A5:G5')
+    ws['A5'] = f"Ref No. {ref_qs}"
+    ws['A5'].font = Font(bold=True)
+    ws['A5'].alignment = Alignment(horizontal='center')
+    
+    ws['A7'] = "Treaty Year  :"; ws['B7'] = year
+    ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} QS"
+    ws['A9'] = "For Months   :"; ws['B9'] = months_text
+    ws['A10'] = "Broker       :"; ws['B10'] = broker
+    
 
     # ===============================
     # TITLE SP
@@ -493,6 +503,15 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker):
 
     ws[f"A{title_row+2}"] = "Broker :"
     ws[f"B{title_row+2}"] = broker
+    ws.merge_cells(f'A{title_row+1}:G{title_row+1}')
+    ws[f'A{title_row+1}'] = f"Ref No. {ref_sp}"
+    ws[f'A{title_row+1}'].font = Font(bold=True)
+    ws[f'A{title_row+1}'].alignment = Alignment(horizontal='center')
+    
+    ws[f"A{title_row+3}"] = "Treaty Year  :"; ws[f"B{title_row+3}"] = year
+    ws[f"A{title_row+4}"] = "Quarter      :"; ws[f"B{title_row+4}"] = f"{quarter} SP"
+    ws[f"A{title_row+5}"] = "For Months   :"; ws[f"B{title_row+5}"] = months_text
+    ws[f"A{title_row+6}"] = "Broker       :"; ws[f"B{title_row+6}"] = broker
 
     # ===============================
     # LOGO SP
@@ -603,7 +622,9 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
             report_qs,
             report_sp,
             sheet_name=str(broker)[:31],
-            broker=broker
+            broker=broker,
+            ref_qs=ref_qs,
+            ref_sp=ref_sp
         )
         
 st.download_button(
