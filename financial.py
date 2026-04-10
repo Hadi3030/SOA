@@ -32,17 +32,25 @@ mapping = {
     'cob':'COB',
     'uy':'UY',
 
-    # 🔥 INI KUNCI NYA
-    # 'value':'CURRENCY',
     'valuta':'CURRENCY',
     'curr':'CURRENCY',
     'currency':'CURRENCY',
 
     'broker':'BROKER',
-    'komisi_qs':'KOMISI_QS',
-    'komisi_sp':'KOMISI_SP',
-    'klaim_qs':'KLAIM_QS',
-    'klaim_sp':'KLAIM_SP'
+
+    # 🔥 SESUAI FILE ASLI
+    'premi_panel_qs':'PREMI_PANEL_QS',
+    'premi_panel_sp':'PREMI_PANEL_SP',
+
+    'komisi_panel_qs':'KOMISI_PANEL_QS',
+    'komisi_panel_sp':'KOMISI_PANEL_SP',
+
+    'klaim_panel_qs':'KLAIM_PANEL_QS',
+    'klaim_panel_sp':'KLAIM_PANEL_SP',
+
+    # ❗ INI YANG TADI SALAH
+    'recoveries_panel_qs':'RECOVERY_PANEL_QS',
+    'recoveries_panel_sp':'RECOVERY_PANEL_SP'
 }
 df = df.rename(columns=mapping)
 
@@ -62,8 +70,20 @@ for col in ['CURRENCY', 'COB', 'BROKER']:
 df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 
 # ===============================
-# FILTER COB
+# CLEAN UY (🔥 TARUH DI SINI)
 # ===============================
+def clean_uy(x):
+    x = str(x)
+    if "/" in x:
+        return int(x.split("/")[0])  # ambil tahun depan
+    try:
+        return int(float(x))
+    except:
+        return None
+
+if 'UY' in df.columns:
+    df['UY'] = df['UY'].apply(clean_uy)
+    df = df.dropna(subset=['UY'])
 # ===============================
 # FILTER COB (CHECKBOX)
 # ===============================
@@ -140,17 +160,12 @@ zero_option = st.selectbox(
 )
 
 # ===============================
-# PARSE PROD
+# USE BULAN & TAHUN LANGSUNG
 # ===============================
-def parse_prod(x):
-    try:
-        x = str(x)
-        return int(x[:4]), int(x[-2:])
-    except:
-        return None, None
+df['MONTH'] = pd.to_numeric(df['bulan'], errors='coerce')
+df['YEAR']  = pd.to_numeric(df['tahun'], errors='coerce')
 
-df[['YEAR','MONTH']] = df['PROD'].apply(lambda x: pd.Series(parse_prod(x)))
-df = df.dropna(subset=['YEAR','MONTH'])
+df = df.dropna(subset=['MONTH','YEAR'])
 
 # ===============================
 # DATE INFO
@@ -175,6 +190,25 @@ missing = [c for c in required_cols if c not in df.columns]
 if missing:
     st.error(f"Kolom wajib tidak ditemukan: {missing}")
     st.stop()
+
+# ===============================
+# CLEAN NUMERIC COLUMNS
+# ===============================
+numeric_cols = [
+    'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS','RECOVERY_PANEL_QS',
+    'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP','RECOVERY_PANEL_SP'
+]
+
+for col in numeric_cols:
+    if col in df.columns:
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.replace(",", "", regex=False)  # hapus koma
+            .str.replace(" ", "", regex=False)  # hapus spasi
+        )
+        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+        
 # ===============================
 # GENERATE REPORT
 # ===============================
@@ -184,8 +218,8 @@ def generate_report(df, tipe, zero_option):
     # AMBIL DATA FINANCIAL
     # ===============================
     cols = [
-        'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS',
-        'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP'
+        'PREMI_PANEL_QS','KOMISI_PANEL_QS','KLAIM_PANEL_QS','RECOVERY_PANEL_QS',
+        'PREMI_PANEL_SP','KOMISI_PANEL_SP','KLAIM_PANEL_SP','RECOVERY_PANEL_SP'
     ]
     
     for col in cols:
@@ -198,12 +232,14 @@ def generate_report(df, tipe, zero_option):
         df['PREMIUM'] = df['PREMI_PANEL_QS']
         df['COMMISSION'] = df['KOMISI_PANEL_QS']
         df['CLAIM'] = df['KLAIM_PANEL_QS']
+        df['RECOVERY'] = df['RECOVERY_PANEL_QS']
     else:
         df['PREMIUM'] = df['PREMI_PANEL_SP']
         df['COMMISSION'] = df['KOMISI_PANEL_SP']
-        df['CLAIM'] = df['KLAIM_PANEL_SP']    
+        df['CLAIM'] = df['KLAIM_PANEL_SP']  
+        df['RECOVERY'] = df['RECOVERY_PANEL_SP']
         
-    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION'] - df['CLAIM']
+    df['AMOUNT'] = df['PREMIUM'] - df['COMMISSION'] - df['CLAIM'] +df['RECOVERY']
 
     grouped = (
         df.groupby(['CURRENCY','COB','UY'])
@@ -223,7 +259,7 @@ def generate_report(df, tipe, zero_option):
         if zero_option == "Hide Zero Rows":
             df_curr = df_curr[
                 ~(
-                    (df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']] == 0)
+                    (df_curr[['PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']] == 0)
                     .all(axis=1)
                 )
             ]
@@ -262,6 +298,7 @@ def generate_report(df, tipe, zero_option):
                     r['PREMIUM'],
                     r['COMMISSION'],
                     r['CLAIM'],
+                    r['RECOVERY'],
                     r['AMOUNT']
                 ])
                 first_row = False
@@ -270,13 +307,13 @@ def generate_report(df, tipe, zero_option):
             # ============================
             # SUBTOTAL COB
             # ============================
-            subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+            subtotal = df_cob[['PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']].sum()
             rows.append(["", f"{cob} TOTAL", "", *subtotal])
 
         # ============================
         # TOTAL CURRENCY
         # ============================
-        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','AMOUNT']].sum()
+        total_curr = df_curr[['PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']].sum()
         rows.append([f"{curr} TOTAL","","", *total_curr])
 
         # SPASI
@@ -284,7 +321,7 @@ def generate_report(df, tipe, zero_option):
 
     return pd.DataFrame(
         rows,
-        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','AMOUNT']
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
     )
 report_qs = generate_report(df.copy(), "QS", zero_option)
 report_sp = generate_report(df.copy(), "SP", zero_option)
@@ -350,7 +387,7 @@ def write_sheet(writer, data, name, tipe, ref):
     ws['A10'] = "Broker       :"; ws['B10'] = selected_broker
     
     # HEADER TABLE
-    for col in "ABCDEFG":
+    for col in "ABCDEFGH":
         cell = ws[f"{col}13"]
         cell.fill = header_fill
         cell.font = Font(color="FFFFFF", bold=True)
@@ -364,11 +401,11 @@ def write_sheet(writer, data, name, tipe, ref):
         val_cob  = ws[f"B{row}"].value
 
         # DEFAULT PUTIH
-        for col in "ABCDEFG":
+        for col in "ABCDEFGH":
             ws[f"{col}{row}"].fill = white_fill
             ws[f"{col}{row}"].border = no_border
 
-        if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFG"):
+        if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFGH"):
             current_currency = None
             continue
 
@@ -387,7 +424,7 @@ def write_sheet(writer, data, name, tipe, ref):
 
         # TOTAL CURRENCY FULL GREY
         if val_curr and "TOTAL" in str(val_curr):
-            for col in "ABCDEFG":
+            for col in "ABCDEFGH":
                 ws[f"{col}{row}"].fill = grey_fill
             current_currency = None
 
@@ -396,11 +433,11 @@ def write_sheet(writer, data, name, tipe, ref):
         ws[f"B{row}"].font = Font(bold=True)
 
         if "TOTAL" in str(val_cob) or "TOTAL" in str(val_curr):
-            for col in "ABCDEFG":
+            for col in "ABCDEFGH":
                 ws[f"{col}{row}"].font = Font(bold=True)
 
         # FORMAT ANGKA
-        for col in ['D','E','F','G']:
+        for col in ['D','E','F','G','H']:
             ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
 
     # NOTE
