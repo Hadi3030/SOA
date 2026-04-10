@@ -73,17 +73,21 @@ df = df[(df['CURRENCY'] != "") & (df['CURRENCY'].notna())]
 # CLEAN UY (🔥 TARUH DI SINI)
 # ===============================
 def clean_uy(x):
-    x = str(x)
-    if "/" in x:
-        return int(x.split("/")[0])  # ambil tahun depan
+    x = str(x).strip()
+
+    # handle format: 2018/2019 atau 2018-2019
+    if "/" in x or "-" in x:
+        sep = "/" if "/" in x else "-"
+        try:
+            return int(x.split(sep)[0])  # ambil tahun depan
+        except:
+            return None
+
+    # handle normal number
     try:
         return int(float(x))
     except:
         return None
-
-if 'UY' in df.columns:
-    df['UY'] = df['UY'].apply(clean_uy)
-    df = df.dropna(subset=['UY'])
 # ===============================
 # FILTER COB (CHECKBOX)
 # ===============================
