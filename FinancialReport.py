@@ -44,6 +44,17 @@ def format_number(val):
 def export_to_word_clean(df, broker_loop, file_name):
 
     doc = Document()
+    from docx.shared import Mm
+
+    section = doc.sections[0]
+    section.page_width = Mm(210)
+    section.page_height = Mm(297)
+    
+    # margin kecil biar muat banyak
+    section.top_margin = Mm(10)
+    section.bottom_margin = Mm(10)
+    section.left_margin = Mm(10)
+    section.right_margin = Mm(10)
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Calibri'
@@ -180,18 +191,6 @@ def export_to_word_clean(df, broker_loop, file_name):
     file_stream.seek(0)
     
     return file_stream
-
-from docx.shared import Mm
-
-section = doc.sections[0]
-section.page_width = Mm(210)
-section.page_height = Mm(297)
-
-# margin kecil biar muat banyak
-section.top_margin = Mm(10)
-section.bottom_margin = Mm(10)
-section.left_margin = Mm(10)
-section.right_margin = Mm(10)
 
 def format_quarter_text(q):
     mapping = {
