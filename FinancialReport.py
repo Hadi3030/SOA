@@ -843,9 +843,30 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
         broker_loop = df['BROKER'].dropna().unique()
     else:
         broker_loop = [selected_broker]
+    # 🔥 FIX UTAMA
     if len(broker_loop) == 0:
         st.error("Tidak ada data broker setelah filter")
-        st.stop()
+        
+        # fallback biar Excel tetap kebentuk
+        pd.DataFrame({"INFO": ["NO DATA AVAILABLE"]}).to_excel(
+            writer, sheet_name="EMPTY", index=False
+        )
+    else:
+        for broker in broker_loop:
+            df_broker = df[df['BROKER'] == broker]
+
+            report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+            report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+            write_combined_sheet(
+                writer,
+                report_qs,
+                report_sp,
+                sheet_name=str(broker)[:31],
+                broker=broker,
+                ref_qs="AUTO",
+                ref_sp="AUTO"
+            )
         
     for broker in broker_loop:
 
