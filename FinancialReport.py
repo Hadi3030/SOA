@@ -20,9 +20,10 @@ def set_cell_bg(cell, color="FFFFFF"):
 def remove_table_borders(table):
     tbl = table._element
     tblPr = tbl.tblPr
+
     borders = OxmlElement('w:tblBorders')
 
-    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+    for edge in ('left', 'right'):
         elem = OxmlElement(f'w:{edge}')
         elem.set(qn('w:val'), 'nil')
         borders.append(elem)
@@ -43,6 +44,10 @@ def format_number(val):
 def export_to_word_clean(df, broker_loop, file_name):
 
     doc = Document()
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Calibri'
+    font.size = Pt(8)
 
     for idx, broker in enumerate(broker_loop):
 
@@ -75,12 +80,14 @@ def export_to_word_clean(df, broker_loop, file_name):
         # =========================
         table = doc.add_table(rows=1, cols=8)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table.autofit = False 
         
         # 🔥 HAPUS GRID
         remove_table_borders(table)
         
         # 🔥 SET LEBAR KOLOM
-        col_widths = [1.2, 2.5, 1, 1.5, 1.5, 1.5, 1.5, 1.5]
+        col_widths = [1, 2.2, 0.8, 1.2, 1.2, 1.2, 1.2, 1.2]
+
         for i, width in enumerate(col_widths):
             for row in table.rows:
                 row.cells[i].width = Inches(width)
@@ -95,6 +102,7 @@ def export_to_word_clean(df, broker_loop, file_name):
             set_cell_bg(cell, "000000")
         
             para = cell.paragraphs[0]
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = para.runs[0]
             run.bold = True
             run.font.color.rgb = RGBColor(255,255,255)
@@ -138,7 +146,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    p.paragraph_format.space_after = Pt(2)
+                    p.paragraph_format.space_after = Pt(0)
 
         # =========================
         # NOTE
@@ -172,6 +180,18 @@ def export_to_word_clean(df, broker_loop, file_name):
     file_stream.seek(0)
     
     return file_stream
+
+from docx.shared import Mm
+
+section = doc.sections[0]
+section.page_width = Mm(210)
+section.page_height = Mm(297)
+
+# margin kecil biar muat banyak
+section.top_margin = Mm(10)
+section.bottom_margin = Mm(10)
+section.left_margin = Mm(10)
+section.right_margin = Mm(10)
 
 def format_quarter_text(q):
     mapping = {
