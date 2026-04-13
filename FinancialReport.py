@@ -836,18 +836,19 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     # last = ws.max_row + 2
     # ws[f"A{last}"] = "Note :"
     # ws[f"B{last}"] = note
-    
+ref_qs = "AUTO"
+ref_sp = "AUTO"
+
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
     if selected_broker == "ALL":
         broker_loop = df['BROKER'].dropna().unique()
     else:
         broker_loop = [selected_broker]
-    # 🔥 FIX UTAMA
+
     if len(broker_loop) == 0:
         st.error("Tidak ada data broker setelah filter")
-        
-        # fallback biar Excel tetap kebentuk
+
         pd.DataFrame({"INFO": ["NO DATA AVAILABLE"]}).to_excel(
             writer, sheet_name="EMPTY", index=False
         )
@@ -864,27 +865,27 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 report_sp,
                 sheet_name=str(broker)[:31],
                 broker=broker,
-                ref_qs="AUTO",
-                ref_sp="AUTO"
+                ref_qs=ref_qs,
+                ref_sp=ref_sp
             )
         
-    for broker in broker_loop:
+    # for broker in broker_loop:
 
-        df_broker = df[df['BROKER'] == broker]
+    #     df_broker = df[df['BROKER'] == broker]
 
-        # 🔥 INI WAJIB PER BROKER
-        report_qs = generate_report(df_broker.copy(), "QS", zero_option)
-        report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+    #     # 🔥 INI WAJIB PER BROKER
+    #     report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+    #     report_sp = generate_report(df_broker.copy(), "SP", zero_option)
 
-        write_combined_sheet(
-            writer,
-            report_qs,
-            report_sp,
-            sheet_name=str(broker)[:31],
-            broker=broker,
-            ref_qs=ref_qs,
-            ref_sp=ref_sp
-        )
+    #     write_combined_sheet(
+    #         writer,
+    #         report_qs,
+    #         report_sp,
+    #         sheet_name=str(broker)[:31],
+    #         broker=broker,
+    #         ref_qs=ref_qs,
+    #         ref_sp=ref_sp
+    #     )
         
 st.download_button(
     "⬇️ Download Report",
