@@ -119,6 +119,25 @@ def export_to_word_clean(df, broker_loop, file_name):
         
             # 🔥 BACKGROUND HITAM
             set_cell_bg(cell, "000000")
+            def set_row_border(cells):
+                from docx.oxml import OxmlElement
+                from docx.oxml.ns import qn
+            
+                for cell in cells:
+                    tc = cell._element
+                    tcPr = tc.get_or_add_tcPr()
+            
+                    tcBorders = OxmlElement('w:tcBorders')
+            
+                    for border_name in ['top', 'bottom']:
+                        border = OxmlElement(f'w:{border_name}')
+                        border.set(qn('w:val'), 'single')
+                        border.set(qn('w:sz'), '12')  # 🔥 tebal
+                        border.set(qn('w:space'), '0')
+                        border.set(qn('w:color'), '000000')
+                        tcBorders.append(border)
+            
+                    tcPr.append(tcBorders)
         
             para = cell.paragraphs[0]
             para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -158,10 +177,40 @@ def export_to_word_clean(df, broker_loop, file_name):
                     para.runs[0].font.color.rgb = RGBColor(255, 0, 0)
 
                 # bold untuk TOTAL
-                if "TOTAL" in str(val):
-                    set_cell_bg(cells[i], "D9D9D9")
-                    para.runs[0].bold = True
-        
+                row_text = " ".join([str(v) for v in values])
+
+                # 🔥 DETECT TYPE TOTAL
+                is_currency_total = "TOTAL" in str(values[0])   # contoh: USD TOTAL
+                is_cob_total = "TOTAL" in str(values[1])        # contoh: FIRE TOTAL
+                is_grand_total = "GRAND TOTAL" in row_text
+                
+                # =========================
+                # APPLY STYLE PER ROW
+                # =========================
+                if is_currency_total or is_grand_total:
+                
+                    # 🔥 background abu hanya untuk currency total
+                    for c in cells:
+                        set_cell_bg(c, "D9D9D9")
+                
+                    # 🔥 bold
+                    for c in cells:
+                        for p in c.paragraphs:
+                            for r in p.runs:
+                                r.bold = True
+                
+                    # 🔥 garis tebal
+                    set_row_border(cells)
+                
+                elif is_cob_total:
+                
+                    # 🔥 hanya bold + garis (tanpa abu)
+                    for c in cells:
+                        for p in c.paragraphs:
+                            for r in p.runs:
+                                r.bold = True
+                
+                    set_row_border(cells)        
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
@@ -184,21 +233,21 @@ def export_to_word_clean(df, broker_loop, file_name):
         run_left.font.size = Pt(8)
         
         # kasih jarak manual biar ke kanan
-        p.add_run("\t\t\t\t\t\t")
-        
-        run_right = p.add_run("Jakarta, January 2026")
+        p.add_run("\t\t\t\t\t\t\t\t\t\t")
+        report_date_str = report_date.strftime("%d %B %Y")
+        run_right = p.add_run(f"Jakarta, {report_date_str}")
         run_right.font.size = Pt(8)
         
         # 🔥 BARIS KEDUA (KIRI & KANAN)
         p2 = doc.add_paragraph()
         
-        run_left2 = p2.add_run(f"Broker : {broker}")
+        run_left2 = p2.add_run(f"{broker}")
         run_left2.bold = True
         
-        p2.add_run("\t\t\t\t\t\t")
+        p2.add_run("\t\t\t\t\t\t\t\t\t\t\t\t")
         
-        run_right2 = p2.add_run("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
-        
+        run_right2 = p2.add_run("PT. Asuransi Kredit Indonesia")
+        run_right2 = p2.add_run("Underwriting & Reinsurance Division")
         # 🔥 SPASI TTD
         doc.add_paragraph("")
         doc.add_paragraph("")
@@ -592,6 +641,8 @@ st.dataframe(report_qs)
 ref_qs = st.text_input("Ref No QS")
 ref_sp = st.text_input("Ref No SPL")
 # note = st.text_area("Note")
+import datetime
+report_date = st.date_input("Pilih Tanggal", datetime.date.today())
 file_name = st.text_input("Nama file", value="SOA_Report")
 
 # ===============================
