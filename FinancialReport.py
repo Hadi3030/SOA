@@ -78,11 +78,19 @@ def export_to_word_clean(df, broker_loop, file_name):
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title.runs[0].bold = True
 
-        doc.add_paragraph(f"Ref No : {ref_qs}")
-        doc.add_paragraph(f"Broker : {broker}")
-        doc.add_paragraph(f"Treaty Year : {year}")
-        doc.add_paragraph(f"Quarter : {quarter}")
-        doc.add_paragraph(f"For Months : {months_text}")
+        # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
+        ref_para = doc.add_paragraph(f"Ref No : {ref_qs}")
+        ref_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        ref_para.runs[0].bold = True
+        
+        p = doc.add_paragraph(f"Treaty Year : {year}")
+        p.paragraph_format.space_after = Pt(0)
+        
+        p = doc.add_paragraph(f"Quarter : {quarter}")
+        p.paragraph_format.space_after = Pt(0)
+        
+        p = doc.add_paragraph(f"For Months : {months_text}")
+        p.paragraph_format.space_after = Pt(2)
 
         doc.add_paragraph("")
 
@@ -165,19 +173,49 @@ def export_to_word_clean(df, broker_loop, file_name):
         # doc.add_paragraph("")
         # doc.add_paragraph(f"Note : {note}")
 
-        # =========================
-        # TTD (KANAN)
+        # TTD (KIRI + KANAN)
         # =========================
         doc.add_paragraph("")
-        ttd = doc.add_paragraph("Jakarta, January 2026")
-        ttd.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        ttd2 = doc.add_paragraph("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
-        ttd2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
+        
+        # 🔥 BARIS ATAS (KIRI & KANAN)
+        p = doc.add_paragraph()
+        
+        run_left = p.add_run("Agreed and approved by Reinsurer")
+        run_left.font.size = Pt(8)
+        
+        # kasih jarak manual biar ke kanan
+        p.add_run("\t\t\t\t\t\t")
+        
+        run_right = p.add_run("Jakarta, January 2026")
+        run_right.font.size = Pt(8)
+        
+        # 🔥 BARIS KEDUA (KIRI & KANAN)
+        p2 = doc.add_paragraph()
+        
+        run_left2 = p2.add_run(f"Broker : {broker}")
+        run_left2.bold = True
+        
+        p2.add_run("\t\t\t\t\t\t")
+        
+        run_right2 = p2.add_run("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
+        
+        # 🔥 SPASI TTD
         doc.add_paragraph("")
+        doc.add_paragraph("")
+        
+        # 🔥 NAMA (KANAN)
         ttd3 = doc.add_paragraph("Budi Santoso AI\nDivision Head")
         ttd3.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        # doc.add_paragraph("")
+        # ttd = doc.add_paragraph("Jakarta, January 2026")
+        # ttd.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        # ttd2 = doc.add_paragraph("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
+        # ttd2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        # doc.add_paragraph("")
+        # ttd3 = doc.add_paragraph("Budi Santoso AI\nDivision Head")
+        # ttd3.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
         # =========================
         # PAGE BREAK
