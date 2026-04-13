@@ -61,7 +61,10 @@ def export_to_word_clean(df, broker_loop, file_name):
     font.size = Pt(8)
 
     for idx, broker in enumerate(broker_loop):
-
+        ref_number = start_number + idx
+        roman_quarter = to_roman(quarter)
+        
+        ref_auto = f"{ref_number}/UDWR/{roman_quarter}/{year}"
         df_broker = df[df['BROKER'] == broker]
 
         report = generate_report(df_broker.copy(), "QS", zero_option)
@@ -79,9 +82,9 @@ def export_to_word_clean(df, broker_loop, file_name):
         title.runs[0].bold = True
 
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
-        ref_para = doc.add_paragraph(f"Ref No : {ref_qs}")
-        ref_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        ref_para.runs[0].bold = True
+        p = doc.add_paragraph(f"Ref No : {ref_auto}")
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(1)
         
         p = doc.add_paragraph(f"Treaty Year : {year}")
         p.paragraph_format.space_after = Pt(0)
@@ -476,7 +479,15 @@ months_text = f"{month_full[min_m]} {year} - {month_full[max_m]} {year}"
 # year = int(df['YEAR'].mode()[0])
 
 # months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
-
+def to_roman(q):
+    mapping = {
+        "I": "I",
+        "II": "II",
+        "III": "III",
+        "IV": "IV"
+    }
+    return mapping.get(q, q)
+    
 def get_quarter(m):
     return ["I","II","III","IV"][(m-1)//3]
 
@@ -638,8 +649,9 @@ st.dataframe(report_qs)
 # ===============================
 # INPUT
 # ===============================
-ref_qs = st.text_input("Ref No QS")
-ref_sp = st.text_input("Ref No SPL")
+start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
+# ref_qs = st.text_input("Ref No QS")
+# ref_sp = st.text_input("Ref No SPL")
 # note = st.text_area("Note")
 import datetime
 report_date = st.date_input("Pilih Tanggal", datetime.date.today())
