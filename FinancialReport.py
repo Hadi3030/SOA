@@ -7,6 +7,28 @@ from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+
+def set_cell_bg(cell, color="FFFFFF"):
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
+    shd = OxmlElement('w:shd')
+    shd.set(qn('w:fill'), color)
+    tcPr.append(shd)
+
+def remove_table_borders(table):
+    tbl = table._element
+    tblPr = tbl.tblPr
+    borders = OxmlElement('w:tblBorders')
+
+    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+        elem = OxmlElement(f'w:{edge}')
+        elem.set(qn('w:val'), 'nil')
+        borders.append(elem)
+
+    tblPr.append(borders)
+
 def format_number(val):
     try:
         val = float(val)
@@ -53,14 +75,29 @@ def export_to_word_clean(df, broker_loop, file_name):
         # =========================
         table = doc.add_table(rows=1, cols=8)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # 🔥 HAPUS GRID
+        remove_table_borders(table)
+        
+        # 🔥 SET LEBAR KOLOM
+        col_widths = [1.2, 2.5, 1, 1.5, 1.5, 1.5, 1.5, 1.5]
+        for i, width in enumerate(col_widths):
+            for row in table.rows:
+                row.cells[i].width = Inches(width)
 
         headers = ['CURRENCY','COB','UY','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
 
         for i, h in enumerate(headers):
             cell = table.rows[0].cells[i]
             cell.text = h
-            for p in cell.paragraphs:
-                p.runs[0].bold = True
+        
+            # 🔥 BACKGROUND HITAM
+            set_cell_bg(cell, "000000")
+        
+            para = cell.paragraphs[0]
+            run = para.runs[0]
+            run.bold = True
+            run.font.color.rgb = RGBColor(255,255,255)
 
         current_currency = None
 
@@ -95,7 +132,13 @@ def export_to_word_clean(df, broker_loop, file_name):
 
                 # bold untuk TOTAL
                 if "TOTAL" in str(val):
+                    set_cell_bg(cells[i], "D9D9D9")
                     para.runs[0].bold = True
+        
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p.paragraph_format.space_after = Pt(2)
 
         # =========================
         # NOTE
