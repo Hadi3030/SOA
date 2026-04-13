@@ -40,6 +40,26 @@ def format_number(val):
     except:
         return str(val), False
 
+def set_row_border(cells):
+                from docx.oxml import OxmlElement
+                from docx.oxml.ns import qn
+            
+                for cell in cells:
+                    tc = cell._element
+                    tcPr = tc.get_or_add_tcPr()
+            
+                    tcBorders = OxmlElement('w:tcBorders')
+            
+                    for border_name in ['top', 'bottom']:
+                        border = OxmlElement(f'w:{border_name}')
+                        border.set(qn('w:val'), 'single')
+                        border.set(qn('w:sz'), '12')  # 🔥 tebal
+                        border.set(qn('w:space'), '0')
+                        border.set(qn('w:color'), '000000')
+                        tcBorders.append(border)
+            
+                    tcPr.append(tcBorders)
+
 
 def export_to_word_clean(df, broker_loop, file_name):
 
@@ -122,25 +142,25 @@ def export_to_word_clean(df, broker_loop, file_name):
         
             # 🔥 BACKGROUND HITAM
             set_cell_bg(cell, "000000")
-            def set_row_border(cells):
-                from docx.oxml import OxmlElement
-                from docx.oxml.ns import qn
+            # def set_row_border(cells):
+            #     from docx.oxml import OxmlElement
+            #     from docx.oxml.ns import qn
             
-                for cell in cells:
-                    tc = cell._element
-                    tcPr = tc.get_or_add_tcPr()
+            #     for cell in cells:
+            #         tc = cell._element
+            #         tcPr = tc.get_or_add_tcPr()
             
-                    tcBorders = OxmlElement('w:tcBorders')
+            #         tcBorders = OxmlElement('w:tcBorders')
             
-                    for border_name in ['top', 'bottom']:
-                        border = OxmlElement(f'w:{border_name}')
-                        border.set(qn('w:val'), 'single')
-                        border.set(qn('w:sz'), '12')  # 🔥 tebal
-                        border.set(qn('w:space'), '0')
-                        border.set(qn('w:color'), '000000')
-                        tcBorders.append(border)
+            #         for border_name in ['top', 'bottom']:
+            #             border = OxmlElement(f'w:{border_name}')
+            #             border.set(qn('w:val'), 'single')
+            #             border.set(qn('w:sz'), '12')  # 🔥 tebal
+            #             border.set(qn('w:space'), '0')
+            #             border.set(qn('w:color'), '000000')
+            #             tcBorders.append(border)
             
-                    tcPr.append(tcBorders)
+            #         tcPr.append(tcBorders)
         
             para = cell.paragraphs[0]
             para.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -182,38 +202,34 @@ def export_to_word_clean(df, broker_loop, file_name):
                 # bold untuk TOTAL
                 row_text = " ".join([str(v) for v in values])
 
-                # 🔥 DETECT TYPE TOTAL
-                is_currency_total = "TOTAL" in str(values[0])   # contoh: USD TOTAL
-                is_cob_total = "TOTAL" in str(values[1])        # contoh: FIRE TOTAL
+                is_currency_total = "TOTAL" in str(values[0])
+                is_cob_total = "TOTAL" in str(values[1])
                 is_grand_total = "GRAND TOTAL" in row_text
                 
-                # =========================
-                # APPLY STYLE PER ROW
-                # =========================
                 if is_currency_total or is_grand_total:
                 
-                    # 🔥 background abu hanya untuk currency total
+                    # abu + bold
                     for c in cells:
                         set_cell_bg(c, "D9D9D9")
                 
-                    # 🔥 bold
                     for c in cells:
                         for p in c.paragraphs:
                             for r in p.runs:
                                 r.bold = True
                 
-                    # 🔥 garis tebal
+                    # 🔥 GARIS TEBAL
                     set_row_border(cells)
                 
                 elif is_cob_total:
                 
-                    # 🔥 hanya bold + garis (tanpa abu)
+                    # hanya bold + garis (tanpa abu)
                     for c in cells:
                         for p in c.paragraphs:
                             for r in p.runs:
                                 r.bold = True
                 
-                    set_row_border(cells)        
+                    # 🔥 GARIS TEBAL
+                    set_row_border(cells)       
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
@@ -249,8 +265,8 @@ def export_to_word_clean(df, broker_loop, file_name):
         
         p2.add_run("\t\t\t\t\t\t\t\t\t\t\t\t")
         
-        run_right2 = p2.add_run("PT. Asuransi Kredit Indonesia")
-        run_right2 = p2.add_run("Underwriting & Reinsurance Division")
+        p2.add_run("PT. Asuransi Kredit Indonesia")
+        p2.add_run("Underwriting & Reinsurance Division")
         # 🔥 SPASI TTD
         doc.add_paragraph("")
         doc.add_paragraph("")
