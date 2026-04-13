@@ -699,11 +699,10 @@ if st.button("📄 Export Word (Rapi)"):
     else:
         broker_loop = [selected_broker]
 
-    path = export_to_word_clean(df, broker_loop, file_name)
+    file_stream = export_to_word_clean(df, broker_loop, file_name)
 
-    with open(path, "rb") as f:
-        st.download_button(
-            "⬇️ Download Word",
-            f,
-            file_name=f"{file_name}.docx"
-        )
+    st.download_button(
+        "⬇️ Download Word",
+        file_stream,
+        file_name=f"{file_name}.docx"
+    )
