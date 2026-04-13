@@ -670,7 +670,7 @@ start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
 # ref_sp = st.text_input("Ref No SPL")
 # note = st.text_area("Note")
 import datetime
-report_date = st.date_input("Pilih Tanggal", datetime.date.today())
+report_date = st.date_input("Tanggal Penandatanganan", datetime.date.today())
 file_name = st.text_input("Nama file", value="SOA_Report")
 
 # ===============================
