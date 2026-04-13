@@ -123,9 +123,12 @@ def export_to_word_clean(df, broker_loop, file_name):
         if idx < len(broker_loop) - 1:
             doc.add_page_break()
 
-    path = f"/mnt/data/{file_name}.docx"
-    doc.save(path)
-    return path
+    import io
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    
+    return file_stream
 
 def format_quarter_text(q):
     mapping = {
