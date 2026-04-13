@@ -159,11 +159,11 @@ def export_to_word_clean(df, broker_loop, file_name):
                 for p in cell.paragraphs:
                     p.paragraph_format.space_after = Pt(0)
 
-        # =========================
-        # NOTE
-        # =========================
-        doc.add_paragraph("")
-        doc.add_paragraph(f"Note : {note}")
+        # # =========================
+        # # NOTE
+        # # =========================
+        # doc.add_paragraph("")
+        # doc.add_paragraph(f"Note : {note}")
 
         # =========================
         # TTD (KANAN)
@@ -199,8 +199,8 @@ def format_quarter_text(q):
     }
     return mapping.get(q, q)
 
-st.set_page_config(page_title="SOA Finance Report", layout="wide")
-st.title("📑 SOA Finance Report Generator")
+st.set_page_config(page_title="SOA Financial Report", layout="wide")
+st.title("📑 SOA Financial Report Generator")
 
 # ===============================
 # UPLOAD
@@ -552,8 +552,8 @@ st.dataframe(report_qs)
 # INPUT
 # ===============================
 ref_qs = st.text_input("Ref No QS")
-ref_sp = st.text_input("Ref No SL")
-note = st.text_area("Note")
+ref_sp = st.text_input("Ref No SPL")
+# note = st.text_area("Note")
 file_name = st.text_input("Nama file", value="SOA_Report")
 
 # ===============================
@@ -713,12 +713,12 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     sp_end = sp_start + len(sp_data) + 1
     apply_style(sp_start, sp_end)
 
-    # ===============================
-    # NOTE
-    # ===============================
-    last = ws.max_row + 2
-    ws[f"A{last}"] = "Note :"
-    ws[f"B{last}"] = note
+    # # ===============================
+    # # NOTE
+    # # ===============================
+    # last = ws.max_row + 2
+    # ws[f"A{last}"] = "Note :"
+    # ws[f"B{last}"] = note
     
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
