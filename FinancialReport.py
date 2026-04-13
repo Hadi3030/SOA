@@ -843,7 +843,10 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
         broker_loop = df['BROKER'].dropna().unique()
     else:
         broker_loop = [selected_broker]
-
+    if len(broker_loop) == 0:
+        st.error("Tidak ada data broker setelah filter")
+        st.stop()
+        
     for broker in broker_loop:
 
         df_broker = df[df['BROKER'] == broker]
