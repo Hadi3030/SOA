@@ -2,6 +2,131 @@ import streamlit as st
 import pandas as pd
 import io
 
+from docx import Document
+from docx.shared import Pt, Inches, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT
+
+def format_number(val):
+    try:
+        val = float(val)
+        if val < 0:
+            return f"({abs(val):,.2f})", True
+        else:
+            return f"{val:,.2f}", False
+    except:
+        return str(val), False
+
+
+def export_to_word_clean(df, broker_loop, file_name):
+
+    doc = Document()
+
+    for idx, broker in enumerate(broker_loop):
+
+        df_broker = df[df['BROKER'] == broker]
+
+        report = generate_report(df_broker.copy(), "QS", zero_option)
+
+        # =========================
+        # HEADER
+        # =========================
+        try:
+            doc.add_picture("askrindo.jpg", width=Inches(1.5))
+        except:
+            pass
+
+        title = doc.add_paragraph("STATEMENT OF ACCOUNT")
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        title.runs[0].bold = True
+
+        doc.add_paragraph(f"Ref No : {ref_qs}")
+        doc.add_paragraph(f"Broker : {broker}")
+        doc.add_paragraph(f"Treaty Year : {year}")
+        doc.add_paragraph(f"Quarter : {quarter}")
+        doc.add_paragraph(f"For Months : {months_text}")
+
+        doc.add_paragraph("")
+
+        # =========================
+        # TABLE HEADER
+        # =========================
+        table = doc.add_table(rows=1, cols=8)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        headers = ['CURRENCY','COB','UY','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+
+        for i, h in enumerate(headers):
+            cell = table.rows[0].cells[i]
+            cell.text = h
+            for p in cell.paragraphs:
+                p.runs[0].bold = True
+
+        current_currency = None
+
+        # =========================
+        # LOOP DATA (🔥 RAPiH)
+        # =========================
+        for _, row in report.iterrows():
+
+            values = list(row)
+
+            cells = table.add_row().cells
+
+            for i, val in enumerate(values):
+
+                text, is_negative = format_number(val) if i >= 3 else (str(val), False)
+
+                cells[i].text = text
+
+                para = cells[i].paragraphs[0]
+
+                # alignment
+                if i >= 3:
+                    para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                elif i == 2:
+                    para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:
+                    para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+                # warna merah untuk negatif
+                if is_negative:
+                    para.runs[0].font.color.rgb = RGBColor(255, 0, 0)
+
+                # bold untuk TOTAL
+                if "TOTAL" in str(val):
+                    para.runs[0].bold = True
+
+        # =========================
+        # NOTE
+        # =========================
+        doc.add_paragraph("")
+        doc.add_paragraph(f"Note : {note}")
+
+        # =========================
+        # TTD (KANAN)
+        # =========================
+        doc.add_paragraph("")
+        ttd = doc.add_paragraph("Jakarta, January 2026")
+        ttd.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        ttd2 = doc.add_paragraph("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
+        ttd2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        doc.add_paragraph("")
+        ttd3 = doc.add_paragraph("Budi Santoso AI\nDivision Head")
+        ttd3.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        # =========================
+        # PAGE BREAK
+        # =========================
+        if idx < len(broker_loop) - 1:
+            doc.add_page_break()
+
+    path = f"/mnt/data/{file_name}.docx"
+    doc.save(path)
+    return path
+
 def format_quarter_text(q):
     mapping = {
         "SP": "Surplus",
@@ -560,3 +685,22 @@ st.download_button(
     data=output.getvalue(),
     file_name=f"{file_name}.xlsx"
 )
+
+# ===============================
+# EXPORT WORD
+# ===============================
+if st.button("📄 Export Word (Rapi)"):
+    
+    if selected_broker == "ALL":
+        broker_loop = df['BROKER'].dropna().unique()
+    else:
+        broker_loop = [selected_broker]
+
+    path = export_to_word_clean(df, broker_loop, file_name)
+
+    with open(path, "rb") as f:
+        st.download_button(
+            "⬇️ Download Word",
+            f,
+            file_name=f"{file_name}.docx"
+        )
