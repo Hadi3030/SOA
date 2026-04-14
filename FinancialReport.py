@@ -799,6 +799,13 @@ file_name = st.text_input("Nama file", value="SOA_Report")
 sign_name = st.text_input("Nama Penandatangan", value="Budi Santoso AI")
 sign_position = st.text_input("Jabatan", value="Division Head")
 
+st.subheader("Pilih Format Download")
+
+export_format = st.selectbox(
+    "Format File",
+    ["Excel (.xlsx)", "Word (.docx)", "PDF (.pdf)"]
+)
+
 # ===============================
 # EXPORT
 # ===============================
@@ -1013,26 +1020,92 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
     #         ref_sp=ref_sp
     #     )
         
-st.download_button(
-    "⬇️ Download Report",
-    data=output.getvalue(),
-    file_name=f"{file_name}.xlsx"
+# ===============================
+# PILIH FORMAT
+# ===============================
+st.subheader("Pilih Format Download")
+
+export_format = st.selectbox(
+    "Format File",
+    ["Excel (.xlsx)", "Word (.docx)", "PDF (.pdf)"]
 )
 
 # ===============================
-# EXPORT WORD
+# GENERATE & DOWNLOAD
 # ===============================
-if st.button("📄 Export Word (Rapi)"):
-    
+if st.button("⬇️ Generate & Download"):
+
     if selected_broker == "ALL":
         broker_loop = df['BROKER'].dropna().unique()
     else:
         broker_loop = [selected_broker]
 
-    file_stream = export_to_word_clean(df, broker_loop, file_name)
+    # =========================
+    # EXCEL
+    # =========================
+    if export_format == "Excel (.xlsx)":
+        output = io.BytesIO()
 
-    st.download_button(
-        "⬇️ Download Word",
-        file_stream,
-        file_name=f"{file_name}.docx"
-    )
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            for broker in broker_loop:
+                df_broker = df[df['BROKER'] == broker]
+
+                report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+                report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+                write_combined_sheet(
+                    writer,
+                    report_qs,
+                    report_sp,
+                    sheet_name=str(broker)[:31],
+                    broker=broker,
+                    ref_qs="AUTO",
+                    ref_sp="AUTO"
+                )
+
+        output.seek(0)
+
+        st.download_button(
+            "⬇️ Download Excel",
+            data=output,
+            file_name=f"{file_name}.xlsx"
+        )
+
+    # =========================
+    # WORD
+    # =========================
+    elif export_format == "Word (.docx)":
+        file_stream = export_to_word_clean(df, broker_loop, file_name)
+
+        st.download_button(
+            "⬇️ Download Word",
+            file_stream,
+            file_name=f"{file_name}.docx"
+        )
+
+    # =========================
+    # PDF
+    # =========================
+    elif export_format == "PDF (.pdf)":
+        st.warning("PDF akan dibuat dari Word (convert otomatis)")
+
+        file_stream = export_to_word_clean(df, broker_loop, file_name)
+
+        with open("temp.docx", "wb") as f:
+            f.write(file_stream.getvalue())
+
+        try:
+            from docx2pdf import convert
+            convert("temp.docx", "temp.pdf")
+
+            with open("temp.pdf", "rb") as f:
+                pdf_bytes = f.read()
+
+            st.download_button(
+                "⬇️ Download PDF",
+                pdf_bytes,
+                file_name=f"{file_name}.pdf"
+            )
+
+        except Exception:
+            st.error("Gagal convert ke PDF. Install dulu: pip install docx2pdf")
