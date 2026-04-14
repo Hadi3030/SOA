@@ -134,7 +134,7 @@ def export_to_word_clean(df, broker_loop, file_name):
             for row in table.rows:
                 row.cells[i].width = Inches(width)
 
-        headers = ['CURRENCY','COB','UY','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+        headers = ['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
 
         for i, h in enumerate(headers):
             cell = table.rows[0].cells[i]
