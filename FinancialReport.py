@@ -22,6 +22,11 @@ def prevent_text_wrap(cell):
 
     noWrap = OxmlElement('w:noWrap')
     tcPr.append(noWrap)
+
+    # 🔥 tambahan penting
+    for paragraph in cell.paragraphs:
+        paragraph.paragraph_format.keep_together = True
+        
 def remove_table_borders(table):
     tbl = table._element
     tblPr = tbl.tblPr
@@ -179,7 +184,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         remove_table_borders(table)
         
         # 🔥 SET LEBAR KOLOM
-        col_widths = [1, 2.2, 0.8, 1.2, 1.2, 1.2, 1.2, 1.2]
+        col_widths = [1, 3.5, 0.7, 1.1, 1.1, 1.1, 1.1, 1.1]
 
         for i, width in enumerate(col_widths):
             for row in table.rows:
@@ -236,7 +241,7 @@ def export_to_word_clean(df, broker_loop, file_name):
 
                 # khusus kolom COB (index 1)
                 if i == 1:
-                    text = str(text)[:25]  # 🔥 potong max 25 karakter (opsional)
+                    text = str(text) #[:25]  # 🔥 potong max 25 karakter (opsional)
                 
                 cells[i].text = text
                 
