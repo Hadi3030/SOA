@@ -183,8 +183,8 @@ def export_to_word_clean(df, broker_loop, file_name):
         # 🔥 TAMBAHKAN DI SINI
         for row in info_table.rows:
             for i, cell in enumerate(row.cells):
-                if i == 2:  # kolom value (Ref No, dll)
-                    cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if i == 2:  # kolom value
+                    cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
         # 🔥 RAPATIN SPACING (INI KUNCI)
         for row in info_table.rows:
             for cell in row.cells:
