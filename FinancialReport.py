@@ -46,24 +46,43 @@ def format_number(val):
         return str(val), False
 
 def set_row_border(cells):
-                from docx.oxml import OxmlElement
-                from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    # mulai dari kolom ke-2 (index 1 = COB)
+    for cell in cells[1:]:
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
+# def set_row_border(cells):
+#                 from docx.oxml import OxmlElement
+#                 from docx.oxml.ns import qn
             
-                for cell in cells:
-                    tc = cell._element
-                    tcPr = tc.get_or_add_tcPr()
+#                 for cell in cells:
+#                     tc = cell._element
+#                     tcPr = tc.get_or_add_tcPr()
             
-                    tcBorders = OxmlElement('w:tcBorders')
+#                     tcBorders = OxmlElement('w:tcBorders')
             
-                    for border_name in ['top', 'bottom']:
-                        border = OxmlElement(f'w:{border_name}')
-                        border.set(qn('w:val'), 'single')
-                        border.set(qn('w:sz'), '12')  # 🔥 tebal
-                        border.set(qn('w:space'), '0')
-                        border.set(qn('w:color'), '000000')
-                        tcBorders.append(border)
+#                     for border_name in ['top', 'bottom']:
+#                         border = OxmlElement(f'w:{border_name}')
+#                         border.set(qn('w:val'), 'single')
+#                         border.set(qn('w:sz'), '12')  # 🔥 tebal
+#                         border.set(qn('w:space'), '0')
+#                         border.set(qn('w:color'), '000000')
+#                         tcBorders.append(border)
             
-                    tcPr.append(tcBorders)
+#                     tcPr.append(tcBorders)
 
 
 def export_to_word_clean(df, broker_loop, file_name):
