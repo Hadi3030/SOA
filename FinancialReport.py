@@ -268,14 +268,22 @@ def export_to_word_clean(df, broker_loop, file_name):
                     # 🔥 PAKAI FULL (INI YANG BENER)
                     set_row_border_full(cells)
 
-                    elif is_cob_total:
+                elif is_cob_total:
                         for c in cells:
                             for p in c.paragraphs:
                                 for r in p.runs:
                                     r.bold = True
                     
                         # 🔥 KHUSUS COB → mulai dari kolom B
-                        set_row_border_cob(cells)
+                        set_row_border_cob(cells)   
+                    # elif is_cob_total:
+                    #     for c in cells:
+                    #         for p in c.paragraphs:
+                    #             for r in p.runs:
+                    #                 r.bold = True
+                    
+                    #     # 🔥 KHUSUS COB → mulai dari kolom B
+                    #     set_row_border_cob(cells)
                     
         for row in table.rows:
             for cell in row.cells:
