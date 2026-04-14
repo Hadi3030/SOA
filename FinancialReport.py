@@ -327,6 +327,7 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
                 for p in cell.paragraphs:
                     p.paragraph_format.space_after = Pt(0)
 
+        doc.add_page_break()
         # =========================
         # SP SECTION (🔥 INI YANG KURANG)
         # =========================
@@ -338,21 +339,41 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
         table_sp.alignment = WD_TABLE_ALIGNMENT.CENTER
         table_sp.autofit = False
         
-        # header sama
+        remove_table_borders(table_sp)
+        
+        # 🔥 SET LEBAR SAMA DENGAN QS
+        col_widths = [1, 4.5, 0.7, 1, 1, 1, 1, 1]
+        for i, width in enumerate(col_widths):
+            for row in table_sp.rows:
+                row.cells[i].width = Inches(width)
+        
         headers = ['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
         
+        # HEADER STYLE
         for i, h in enumerate(headers):
             cell = table_sp.rows[0].cells[i]
             cell.text = h
             set_cell_bg(cell, "000000")
         
-        # 🔥 LOOP SP (INI YANG PENTING)
+            para = cell.paragraphs[0]
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = para.runs[0]
+            run.bold = True
+            run.font.color.rgb = RGBColor(255,255,255)
+        
+        # 🔥 LOOP DATA SP (FULL FIX)
         for _, row in report_sp.iterrows():
+        
+            values = list(row)
             cells = table_sp.add_row().cells
         
-            for i, val in enumerate(row):
+            for i, val in enumerate(values):
+        
                 text, is_negative = format_number(val) if i >= 3 else (str(val), False)
+        
                 cells[i].text = text
+        
+                prevent_text_wrap(cells[i])  # 🔥 penting
         
                 para = cells[i].paragraphs[0]
         
@@ -362,6 +383,41 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
                     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 else:
                     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        
+                if is_negative:
+                    para.runs[0].font.color.rgb = RGBColor(255, 0, 0)
+        
+            # 🔥 HANDLE TOTAL
+            row_text = " ".join([str(v) for v in values])
+        
+            is_currency_total = "TOTAL" in str(values[0])
+            is_cob_total = "TOTAL" in str(values[1])
+            is_grand_total = "GRAND TOTAL" in row_text
+        
+            if is_currency_total or is_grand_total:
+                for c in cells:
+                    set_cell_bg(c, "D9D9D9")
+        
+                for c in cells:
+                    for p in c.paragraphs:
+                        for r in p.runs:
+                            r.bold = True
+        
+                set_row_border_full(cells)
+        
+            elif is_cob_total:
+                for c in cells:
+                    for p in c.paragraphs:
+                        for r in p.runs:
+                            r.bold = True
+        
+                set_row_border_cob(cells)
+        
+        # 🔥 RAPATIN SPACING
+        for row in table_sp.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p.paragraph_format.space_after = Pt(0)
         
         # # =========================
         # # NOTE
