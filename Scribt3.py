@@ -1,7 +1,17 @@
 import streamlit as st
 import pandas as pd
 import io
+import re
 
+def parse_ref(ref):
+    match = re.match(r"(\d+)(/.+)", ref)
+    if match:
+        return int(match.group(1)), match.group(2)
+    return 1, ""
+
+def build_ref(num, suffix):
+    return f"{num}{suffix}"
+    
 st.set_page_config(page_title="SOA Report ALL Broker", layout="wide")
 
 # LOGO + TITLE
@@ -298,9 +308,11 @@ def generate_report(df, tipe, zero_option):
 # INPUT USER
 # ===============================
 ref_qs = st.text_input("Ref No QS")
-ref_sp = st.text_input("Ref No SL")
+ref_sp = st.text_input("Ref No SPL")
 note = st.text_area("Note")
 file_name = st.text_input("Nama file", value="SOA_Report")
+
+signature_place = st.text_input("Tempat Tanda Tangan", value="Jakarta, ........")
 
 # ===============================
 # EXPORT MULTI BROKER
@@ -316,13 +328,16 @@ if st.button("⬇️ Download All Broker"):
     grey_fill = PatternFill("solid", fgColor="D9D9D9")
     white_fill = PatternFill("solid", fgColor="FFFFFF")
     no_border = Border()
+    
 
-    def write_sheet(writer, data, name, tipe, ref, broker_name):
+    def write_sheet(writer, data, name, tipe, ref, broker_name, signature_place):
 
         data.to_excel(writer, index=False, sheet_name=name, startrow=12)
         ws = writer.sheets[name]
-
+    
+        # ======================
         # LOGO
+        # ======================
         try:
             logo = Image("askrindo.jpg")
             logo.height = 60
@@ -330,80 +345,128 @@ if st.button("⬇️ Download All Broker"):
             ws.add_image(logo, "A1")
         except:
             pass
-
+    
+        # ======================
         # TITLE
+        # ======================
         ws.merge_cells('A4:G4')
         ws['A4'] = "STATEMENT OF ACCOUNT"
         ws['A4'].font = Font(bold=True, size=14)
         ws['A4'].alignment = Alignment(horizontal='center')
-
+    
         ws.merge_cells('A5:G5')
         ws['A5'] = f"Ref No. {ref}"
         ws['A5'].font = Font(bold=True)
         ws['A5'].alignment = Alignment(horizontal='center')
-
+    
+        # ======================
         # HEADER INFO
-        ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-        ws['A8'] = "Quarter      :"; ws['B8'] = f"{quarter} {tipe}"
-        ws['A9'] = "For Months   :"; ws['B9'] = months_text
-        ws['A10'] = "Broker       :"; ws['B10'] = broker_name
-
-        # HEADER TABLE
-
-        header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+        # ======================
+        ws['A7'] = "Treaty Year  :"
+        ws['B7'] = year
+    
+        ws['A8'] = "Quarter      :"
+        ws['B8'] = f"{quarter} {tipe}"
+    
+        ws['A9'] = "Contract Name:"
+        ws['B9'] = "Quota Share" if tipe == "QS" else "Surplus"
+    
+        ws['A10'] = "For Months   :"
+        ws['B10'] = months_text
+    
+        # ======================
+        # TABLE HEADER STYLE
+        # ======================
+        header_fill = PatternFill("solid", fgColor="000000")
         header_font = Font(color="FFFFFF", bold=True)
-        
-        for col in range(1, 8):  # kolom A-G
+    
+        for col in range(1, 8):
             cell = ws.cell(row=13, column=col)
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center", vertical="center")
-
+    
+        # ======================
+        # BODY FORMAT
+        # ======================
         current_currency = None
-
-        for row in range(14, ws.max_row+1):
-
+    
+        for row in range(14, ws.max_row + 1):
+    
             val_curr = ws[f"A{row}"].value
-            val_cob  = ws[f"B{row}"].value
-
+    
             for col in "ABCDEFG":
                 ws[f"{col}{row}"].fill = white_fill
-
+    
             if all(ws[f"{col}{row}"].value in ["", None] for col in "ABCDEFG"):
                 current_currency = None
                 continue
-
-            if val_curr not in ["", None] and "TOTAL" not in str(val_curr):
+    
+            if val_curr and "TOTAL" not in str(val_curr):
                 current_currency = val_curr
-
+    
             if current_currency:
                 ws[f"A{row}"].fill = grey_fill
-
+    
             if val_curr and "TOTAL" in str(val_curr):
                 for col in "ABCDEFG":
                     ws[f"{col}{row}"].fill = grey_fill
                 current_currency = None
-
+    
             for col in ['D','E','F','G']:
                 ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
-
+    
+        # ======================
         # NOTE
+        # ======================
         last = ws.max_row + 2
         ws[f"A{last}"] = "Note :"
         ws[f"B{last}"] = note
+    
+        # ======================
+        # FOOTER TTD (INI YANG KAMU TANYA)
+        # ======================
+        footer_row = last + 4
+    
+        # LEFT: BROKER
+        ws.merge_cells(start_row=footer_row, start_column=1, end_row=footer_row, end_column=3)
+        ws.cell(row=footer_row, column=1).value = f"{broker_name}"
+        ws.cell(row=footer_row, column=1).font = Font(bold=True)
+        ws.cell(row=footer_row, column=1).alignment = Alignment(horizontal="left")
+    
+        # RIGHT: PLACE + SIGNATURE
+        ws.merge_cells(start_row=footer_row, start_column=5, end_row=footer_row, end_column=7)
+        ws.cell(row=footer_row, column=5).value = signature_place
+        ws.cell(row=footer_row, column=5).alignment = Alignment(horizontal="right")
+    
+        # SIGNATURE LINE
+        ws.merge_cells(start_row=footer_row + 2, start_column=5, end_row=footer_row + 2, end_column=7)
+        ws.cell(row=footer_row + 2, column=5).value = ".............................."
+        ws.cell(row=footer_row + 2, column=5).alignment = Alignment(horizontal="right")
 
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
         brokers = df["BROKER"].dropna().unique()
-
+        qs_start, qs_suffix = parse_ref(ref_qs)
+        sp_start, sp_suffix = parse_ref(ref_sp)
+        
+        qs_counter = qs_start
+        sp_counter = sp_start
+       
         for broker in brokers:
             df_b = df[df["BROKER"] == broker]
-
+        
+            qs_ref = build_ref(qs_counter, qs_suffix)
+            sp_ref = build_ref(sp_counter, sp_suffix)
+        
             report_qs = generate_report(df_b.copy(), "QS", zero_option)
             report_sp = generate_report(df_b.copy(), "SP", zero_option)
-
-            write_sheet(writer, report_qs, f"QS_{broker}"[:31], "Quota Share", ref_qs, broker)
-            write_sheet(writer, report_sp, f"SP_{broker}"[:31], "Surplus", ref_sp, broker)
+        
+            write_sheet(writer, report_qs, f"QS_{broker}"[:31], "Quota Share", qs_ref, broker, signature_place)
+            write_sheet(writer, report_sp, f"SP_{broker}"[:31], "Surplus", sp_ref, broker, signature_place)
+        
+            qs_counter += 1
+            sp_counter += 1
 
     st.download_button(
         "📥 Download Excel",
