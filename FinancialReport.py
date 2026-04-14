@@ -256,7 +256,6 @@ def export_to_word_clean(df, broker_loop, file_name):
                 is_grand_total = "GRAND TOTAL" in row_text
                 
                 if is_currency_total or is_grand_total:
-                
                     # abu + bold
                     for c in cells:
                         set_cell_bg(c, "D9D9D9")
@@ -266,19 +265,18 @@ def export_to_word_clean(df, broker_loop, file_name):
                             for r in p.runs:
                                 r.bold = True
                 
-                    # 🔥 GARIS TEBAL
-                    set_row_border(cells)
-                
-                elif is_cob_total:
-                
-                    # hanya bold + garis (tanpa abu)
-                    for c in cells:
-                        for p in c.paragraphs:
-                            for r in p.runs:
-                                r.bold = True
-                
-                    # 🔥 GARIS TEBAL
-                    set_row_border(cells)       
+                    # 🔥 PAKAI FULL (INI YANG BENER)
+                    set_row_border_full(cells)
+
+                    elif is_cob_total:
+                        for c in cells:
+                            for p in c.paragraphs:
+                                for r in p.runs:
+                                    r.bold = True
+                    
+                        # 🔥 KHUSUS COB → mulai dari kolom B
+                        set_row_border_cob(cells)
+                    
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
