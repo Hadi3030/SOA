@@ -360,25 +360,6 @@ def export_to_word_clean(df, broker_loop, file_name):
         run_company.bold = True
         p1.add_run("Underwriting & Reinsurance Division\n\n")
         
-        # =========================
-        # PARAGRAPH 2 (GARIS TTD)
-        # =========================
-        p_line = right_cell2.add_paragraph()
-        p_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # 🔥 GARIS (BOTTOM BORDER)
-        pPr = p_line._element.get_or_add_pPr()
-        pBdr = OxmlElement('w:pBdr')
-        bottom = OxmlElement('w:bottom')
-        bottom.set(qn('w:val'), 'single')
-        bottom.set(qn('w:sz'), '12')   # ketebalan garis
-        bottom.set(qn('w:space'), '1')
-        bottom.set(qn('w:color'), '000000')
-        pBdr.append(bottom)
-        pPr.append(pBdr)
-        
-        # kasih spasi biar garis agak panjang
-        p_line.add_run(" " * 30)
         
         # =========================
         # PARAGRAPH 3 (NAMA + JABATAN)
@@ -386,8 +367,12 @@ def export_to_word_clean(df, broker_loop, file_name):
         p_name = right_cell2.add_paragraph()
         p_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        run_name = p_name.add_run(f"{sign_name}\n{sign_position}")
-        run_name.bold = True       
+        run_name = p_name.add_run(f"{sign_name}")
+        run_name.bold = True
+        run_name.underline = True  
+        # pindah jabatan ke baris baru TANPA underline
+        run_pos = p_name.add_run(f"\n{sign_position}")
+        run_pos.bold = True
         if idx < len(broker_loop) - 1:
             doc.add_page_break()
 
