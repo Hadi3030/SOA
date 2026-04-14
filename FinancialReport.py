@@ -16,7 +16,12 @@ def set_cell_bg(cell, color="FFFFFF"):
     shd = OxmlElement('w:shd')
     shd.set(qn('w:fill'), color)
     tcPr.append(shd)
+def prevent_text_wrap(cell):
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
 
+    noWrap = OxmlElement('w:noWrap')
+    tcPr.append(noWrap)
 def remove_table_borders(table):
     tbl = table._element
     tblPr = tbl.tblPr
@@ -183,7 +188,14 @@ def export_to_word_clean(df, broker_loop, file_name):
 
                 text, is_negative = format_number(val) if i >= 3 else (str(val), False)
 
+                # khusus kolom COB (index 1)
+                if i == 1:
+                    text = str(text)[:25]  # 🔥 potong max 25 karakter (opsional)
+                
                 cells[i].text = text
+                
+                # 🔥 cegah wrap (biar tetap 1 baris)
+                prevent_text_wrap(cells[i])
 
                 para = cells[i].paragraphs[0]
 
