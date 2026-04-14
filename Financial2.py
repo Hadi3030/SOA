@@ -2,6 +2,299 @@ import streamlit as st
 import pandas as pd
 import io
 
+from docx import Document
+from docx.shared import Pt, Inches, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT
+
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+
+def set_cell_bg(cell, color="FFFFFF"):
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
+    shd = OxmlElement('w:shd')
+    shd.set(qn('w:fill'), color)
+    tcPr.append(shd)
+def prevent_text_wrap(cell):
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
+
+    noWrap = OxmlElement('w:noWrap')
+    tcPr.append(noWrap)
+
+    # 🔥 tambahan penting
+    for paragraph in cell.paragraphs:
+        paragraph.paragraph_format.keep_together = True
+        paragraph.paragraph_format.keep_with_next = True
+        paragraph.paragraph_format.line_spacing = 1
+        
+def remove_table_borders(table):
+    tbl = table._element
+    tblPr = tbl.tblPr
+
+    borders = OxmlElement('w:tblBorders')
+
+    for edge in ('left', 'right'):
+        elem = OxmlElement(f'w:{edge}')
+        elem.set(qn('w:val'), 'nil')
+        borders.append(elem)
+
+    tblPr.append(borders)
+
+def format_number(val):
+    try:
+        val = float(val)
+        if val < 0:
+            return f"({abs(val):,.2f})", True
+        else:
+            return f"{val:,.2f}", False
+    except:
+        return str(val), False
+
+def set_row_border(cells):
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    # mulai dari kolom ke-2 (index 1 = COB)
+    for cell in cells[1:]:
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
+
+def set_row_border_cob(cells):
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    for cell in cells[1:]:  # mulai dari COB
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
+
+def set_row_border_full(cells):
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    for cell in cells:  # semua kolom
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
+
+def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
+
+    doc = Document()
+    from docx.shared import Mm
+
+    section = doc.sections[0]
+    section.page_width = Mm(210)
+    section.page_height = Mm(297)
+
+    section.top_margin = Mm(10)
+    section.bottom_margin = Mm(10)
+    section.left_margin = Mm(10)
+    section.right_margin = Mm(10)
+
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Calibri'
+    font.size = Pt(8)
+
+    # 🔥 COUNTER GLOBAL
+    ref_counter = start_number
+
+    for broker in broker_loop:
+
+        df_broker = df[df['BROKER'] == broker]
+
+        # =========================
+        # ===== QS SECTION ========
+        # =========================
+        ref_qs = f"{ref_counter}/UDWR/{to_roman(quarter)}/{year}"
+        ref_counter += 1
+
+        report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+
+        # HEADER QS
+        title = doc.add_paragraph("STATEMENT OF ACCOUNT - QUOTA SHARE")
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        title.runs[0].bold = True
+
+        p_ref = doc.add_paragraph(f"Ref No : {ref_qs}")
+        p_ref.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # INFO TABLE
+        info_table = doc.add_table(rows=4, cols=3)
+        remove_table_borders(info_table)
+
+        data_info = [
+            ("Treaty Year", ":", str(year)),
+            ("Quarter", ":", quarter_qs),
+            ("For Months", ":", months_text),
+            ("Remarks", ":", remark_text)
+        ]
+
+        for i, (l, c, v) in enumerate(data_info):
+            info_table.cell(i, 0).text = l
+            info_table.cell(i, 1).text = c
+            info_table.cell(i, 2).text = v
+
+        doc.add_paragraph("")
+
+        # TABLE QS
+        table = doc.add_table(rows=1, cols=8)
+        remove_table_borders(table)
+
+        headers = ['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+
+        for i, h in enumerate(headers):
+            cell = table.rows[0].cells[i]
+            cell.text = h
+            set_cell_bg(cell, "000000")
+            para = cell.paragraphs[0]
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            para.runs[0].bold = True
+            para.runs[0].font.color.rgb = RGBColor(255,255,255)
+
+        for _, row in report_qs.iterrows():
+            cells = table.add_row().cells
+
+            for i, val in enumerate(row):
+                text, neg = format_number(val) if i >= 3 else (str(val), False)
+                cells[i].text = text
+
+                para = cells[i].paragraphs[0]
+                para.alignment = WD_ALIGN_PARAGRAPH.RIGHT if i >= 3 else WD_ALIGN_PARAGRAPH.LEFT
+
+                if neg:
+                    para.runs[0].font.color.rgb = RGBColor(255, 0, 0)
+
+        # TTD QS
+        doc.add_paragraph("")
+        doc.add_paragraph("Agreed and approved by Reinsurer")
+        doc.add_paragraph(broker).runs[0].bold = True
+
+        doc.add_paragraph(f"Jakarta, {report_date.strftime('%d %B %Y')}")
+        doc.add_paragraph("PT. Asuransi Kredit Indonesia").runs[0].bold = True
+        doc.add_paragraph("Underwriting & Reinsurance Division")
+        doc.add_paragraph("")
+        doc.add_paragraph(sign_name).runs[0].bold = True
+        doc.add_paragraph(sign_position)
+
+        # PAGE BREAK KE SP
+        doc.add_page_break()
+
+        # =========================
+        # ===== SP SECTION ========
+        # =========================
+        ref_sp = f"{ref_counter}/UDWR/{to_roman(quarter)}/{year}"
+        ref_counter += 1
+
+        report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+        # HEADER SP
+        title = doc.add_paragraph("STATEMENT OF ACCOUNT - SURPLUS")
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        title.runs[0].bold = True
+
+        p_ref = doc.add_paragraph(f"Ref No : {ref_sp}")
+        p_ref.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # INFO TABLE SP
+        info_table = doc.add_table(rows=4, cols=3)
+        remove_table_borders(info_table)
+
+        data_info = [
+            ("Treaty Year", ":", str(year)),
+            ("Quarter", ":", quarter_sp),
+            ("For Months", ":", months_text),
+            ("Remarks", ":", remark_text)
+        ]
+
+        for i, (l, c, v) in enumerate(data_info):
+            info_table.cell(i, 0).text = l
+            info_table.cell(i, 1).text = c
+            info_table.cell(i, 2).text = v
+
+        doc.add_paragraph("")
+
+        # TABLE SP
+        table = doc.add_table(rows=1, cols=8)
+        remove_table_borders(table)
+
+        for i, h in enumerate(headers):
+            cell = table.rows[0].cells[i]
+            cell.text = h
+            set_cell_bg(cell, "000000")
+            para = cell.paragraphs[0]
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            para.runs[0].bold = True
+            para.runs[0].font.color.rgb = RGBColor(255,255,255)
+
+        for _, row in report_sp.iterrows():
+            cells = table.add_row().cells
+
+            for i, val in enumerate(row):
+                text, neg = format_number(val) if i >= 3 else (str(val), False)
+                cells[i].text = text
+
+                para = cells[i].paragraphs[0]
+                para.alignment = WD_ALIGN_PARAGRAPH.RIGHT if i >= 3 else WD_ALIGN_PARAGRAPH.LEFT
+
+                if neg:
+                    para.runs[0].font.color.rgb = RGBColor(255, 0, 0)
+
+        # TTD SP
+        doc.add_paragraph("")
+        doc.add_paragraph("Agreed and approved by Reinsurer")
+        doc.add_paragraph(broker).runs[0].bold = True
+
+        doc.add_paragraph(f"Jakarta, {report_date.strftime('%d %B %Y')}")
+        doc.add_paragraph("PT. Asuransi Kredit Indonesia").runs[0].bold = True
+        doc.add_paragraph("Underwriting & Reinsurance Division")
+        doc.add_paragraph("")
+        doc.add_paragraph(sign_name).runs[0].bold = True
+        doc.add_paragraph(sign_position)
+
+        # PAGE BREAK ANTAR BROKER
+        if broker != broker_loop[-1]:
+            doc.add_page_break()
+
+    file_stream = io.BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+
+    return file_stream
+    
 def format_quarter_text(q):
     mapping = {
         "SP": "Surplus",
@@ -9,8 +302,8 @@ def format_quarter_text(q):
     }
     return mapping.get(q, q)
 
-st.set_page_config(page_title="SOA Finance Report", layout="wide")
-st.title("📑 SOA Finance Report Generator")
+st.set_page_config(page_title="SOA Financial Report", layout="wide")
+st.title("📑 SOA Financial Report Generator")
 
 # ===============================
 # UPLOAD
@@ -199,7 +492,15 @@ months_text = f"{month_full[min_m]} {year} - {month_full[max_m]} {year}"
 # year = int(df['YEAR'].mode()[0])
 
 # months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
-
+def to_roman(q):
+    mapping = {
+        "I": "I",
+        "II": "II",
+        "III": "III",
+        "IV": "IV"
+    }
+    return mapping.get(q, q)
+    
 def get_quarter(m):
     return ["I","II","III","IV"][(m-1)//3]
 
@@ -338,7 +639,7 @@ def generate_report(df, tipe, zero_option):
         rows.append([f"{curr} TOTAL","","", *total_curr])
 
         # SPASI
-        rows.append(["","","","","","",""])
+        rows.append(["","","","","","","",""])
     # ============================
     # GRAND TOTAL
     # ============================
@@ -347,8 +648,14 @@ def generate_report(df, tipe, zero_option):
     rows.append(["", "GRAND TOTAL", "", *grand_total])
             
     # spasi akhir
-    rows.append(["","","","","","",""])        
-
+    rows.append(["","","","","","","",""])        
+# Tambahin disini
+    df_result = pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+    )
+    
+    return df_result.fillna("")
     return pd.DataFrame(
         rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
@@ -361,10 +668,19 @@ st.dataframe(report_qs)
 # ===============================
 # INPUT
 # ===============================
-ref_qs = st.text_input("Ref No QS")
-ref_sp = st.text_input("Ref No SL")
-note = st.text_area("Note")
+start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
+quarter_qs = st.selectbox("Quarter QS", ["I Quota Share", "II Quota Share", "III Quota Share", "IV Quota Share"])
+quarter_sp = st.selectbox("Quarter SP", ["I Surplus", "II Surplus", "III Surplus", "IV Surplus"])
+remark_text = st.text_input("Remarks", value="")
+# ref_qs = st.text_input("Ref No QS")
+# ref_sp = st.text_input("Ref No SPL")
+# note = st.text_area("Note")
+import datetime
+report_date = st.date_input("Tanggal Penandatanganan", datetime.date.today())
 file_name = st.text_input("Nama file", value="SOA_Report")
+
+sign_name = st.text_input("Nama Penandatangan", value="Budi Santoso AI")
+sign_position = st.text_input("Jabatan", value="Division Head")
 
 # ===============================
 # EXPORT
@@ -379,7 +695,7 @@ grey_fill = PatternFill("solid", fgColor="D9D9D9")
 white_fill = PatternFill("solid", fgColor="FFFFFF")
 no_border = Border()
 
-def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp):
+def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp, quarter_qs, quarter_sp):
 
     qs_start = 12
     sp_start = qs_start + len(qs_data) + 15
@@ -417,8 +733,8 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     ws['A5'].alignment = Alignment(horizontal='center')
     
     ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-    ws['B8'] = f"{quarter} {format_quarter_text('QS')}"
-    ws[f"B{title_row+4}"] = f"{quarter} {format_quarter_text('SP')}"
+    ws['B8'] = f"{quarter_qs} {format_quarter_text('QS')}"
+    ws[f"B{title_row+4}"] = f"{quarter_sp} {format_quarter_text('SP')}"
     
 
     # ===============================
@@ -439,7 +755,7 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     ws[f'A{title_row+1}'].alignment = Alignment(horizontal='center')
     
     ws[f"A{title_row+3}"] = "Treaty Year  :"; ws[f"B{title_row+3}"] = year
-    ws[f"A{title_row+4}"] = "Quarter      :"; ws[f"B{title_row+4}"] = f"{quarter} SP"
+    ws[f"A{title_row+4}"] = "Quarter      :"; ws[f"B{title_row+4}"] = f"{quarter_sp} SP"
     ws[f"A{title_row+5}"] = "For Months   :"; ws[f"B{title_row+5}"] = months_text
     ws[f"A{title_row+6}"] = "Broker       :"; ws[f"B{title_row+6}"] = broker
 
@@ -523,13 +839,15 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     sp_end = sp_start + len(sp_data) + 1
     apply_style(sp_start, sp_end)
 
-    # ===============================
-    # NOTE
-    # ===============================
-    last = ws.max_row + 2
-    ws[f"A{last}"] = "Note :"
-    ws[f"B{last}"] = note
-    
+    # # ===============================
+    # # NOTE
+    # # ===============================
+    # last = ws.max_row + 2
+    # ws[f"A{last}"] = "Note :"
+    # ws[f"B{last}"] = note
+ref_qs = "AUTO"
+ref_sp = "AUTO"
+
 with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
     if selected_broker == "ALL":
@@ -537,26 +855,141 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
     else:
         broker_loop = [selected_broker]
 
-    for broker in broker_loop:
+    if len(broker_loop) == 0:
+        st.error("Tidak ada data broker setelah filter")
 
-        df_broker = df[df['BROKER'] == broker]
-
-        # 🔥 INI WAJIB PER BROKER
-        report_qs = generate_report(df_broker.copy(), "QS", zero_option)
-        report_sp = generate_report(df_broker.copy(), "SP", zero_option)
-
-        write_combined_sheet(
-            writer,
-            report_qs,
-            report_sp,
-            sheet_name=str(broker)[:31],
-            broker=broker,
-            ref_qs=ref_qs,
-            ref_sp=ref_sp
+        pd.DataFrame({"INFO": ["NO DATA AVAILABLE"]}).to_excel(
+            writer, sheet_name="EMPTY", index=False
         )
+    else:
+        for broker in broker_loop:
+            df_broker = df[df['BROKER'] == broker]
+
+            report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+            report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+            write_combined_sheet(
+                writer,
+                report_qs,
+                report_sp,
+                sheet_name=str(broker)[:31],
+                broker=broker,
+                ref_qs=ref_qs,
+                ref_sp=ref_sp,
+                quarter_qs=quarter_qs,
+                quarter_sp=quarter_sp
+            )
         
-st.download_button(
-    "⬇️ Download Report",
-    data=output.getvalue(),
-    file_name=f"{file_name}.xlsx"
+    # for broker in broker_loop:
+
+    #     df_broker = df[df['BROKER'] == broker]
+
+    #     # 🔥 INI WAJIB PER BROKER
+    #     report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+    #     report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+    #     write_combined_sheet(
+    #         writer,
+    #         report_qs,
+    #         report_sp,
+    #         sheet_name=str(broker)[:31],
+    #         broker=broker,
+    #         ref_qs=ref_qs,
+    #         ref_sp=ref_sp
+    #     )
+        
+# ===============================
+# PILIH FORMAT
+# ===============================
+st.subheader("Pilih Format Download")
+
+export_format = st.selectbox(
+    "Format File",
+    ["Excel (.xlsx)", "Word (.docx)", "PDF (.pdf)"]
 )
+
+# ===============================
+# GENERATE & DOWNLOAD
+# ===============================
+if st.button("⬇️ Generate & Download"):
+
+    if selected_broker == "ALL":
+        broker_loop = df['BROKER'].dropna().unique()
+    else:
+        broker_loop = [selected_broker]
+
+    # =========================
+    # EXCEL
+    # =========================
+    if export_format == "Excel (.xlsx)":
+        output = io.BytesIO()
+
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            for broker in broker_loop:
+                df_broker = df[df['BROKER'] == broker]
+
+                report_qs = generate_report(df_broker.copy(), "QS", zero_option)
+                report_sp = generate_report(df_broker.copy(), "SP", zero_option)
+
+                write_combined_sheet(
+                    writer,
+                    report_qs,
+                    report_sp,
+                    sheet_name=str(broker)[:31],
+                    broker=broker,
+                    ref_qs="AUTO",
+                    ref_sp="AUTO"
+                )
+
+        output.seek(0)
+
+        st.download_button(
+            "⬇️ Download Excel",
+            data=output,
+            file_name=f"{file_name}.xlsx"
+        )
+
+    # =========================
+    # WORD
+    # =========================
+    elif export_format == "Word (.docx)":
+        file_stream = export_to_word_clean(
+            df,
+            broker_loop,
+            file_name,
+            quarter_qs,
+            quarter_sp
+        )
+
+        st.download_button(
+            "⬇️ Download Word",
+            file_stream,
+            file_name=f"{file_name}.docx"
+        )
+
+    # =========================
+    # PDF
+    # =========================
+    elif export_format == "PDF (.pdf)":
+        st.warning("PDF akan dibuat dari Word (convert otomatis)")
+
+        file_stream = export_to_word_clean(df, broker_loop, file_name)
+
+        with open("temp.docx", "wb") as f:
+            f.write(file_stream.getvalue())
+
+        try:
+            from docx2pdf import convert
+            convert("temp.docx", "temp.pdf")
+
+            with open("temp.pdf", "rb") as f:
+                pdf_bytes = f.read()
+
+            st.download_button(
+                "⬇️ Download PDF",
+                pdf_bytes,
+                file_name=f"{file_name}.pdf"
+            )
+
+        except Exception:
+            st.error("Gagal convert ke PDF. Install dulu: pip install docx2pdf")
