@@ -134,10 +134,9 @@ def export_to_word_clean(df, broker_loop, file_name):
         # =========================
         # HEADER
         # =========================
-        try:
-            doc.add_picture("askrindo.jpg", width=Inches(1.5))
-        except:
-            pass
+                # 🔥 SPACE UNTUK KOP SURAT (tanpa logo)
+        p_space = doc.add_paragraph("")
+        p_space.paragraph_format.space_after = Pt(40)  # bisa 30–50 sesuai kebutuhan
 
         title = doc.add_paragraph("STATEMENT OF ACCOUNT")
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -147,19 +146,27 @@ def export_to_word_clean(df, broker_loop, file_name):
         title.paragraph_format.space_after = Pt(0)
         
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
-        p = doc.add_paragraph(f"Ref No : {ref_auto}")
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_after = Pt(0)
+        info_table = doc.add_table(rows=4, cols=3)
+        info_table.autofit = False
         
-        p = doc.add_paragraph(f"Treaty Year : {year}")
-        p.paragraph_format.space_after = Pt(0)
+        # lebar kolom biar sejajar
+        info_table.columns[0].width = Inches(1.5)
+        info_table.columns[1].width = Inches(0.3)
+        info_table.columns[2].width = Inches(4)
         
-        p = doc.add_paragraph(f"Quarter : {quarter}")
-        p.paragraph_format.space_after = Pt(0)
+        remove_table_borders(info_table)
         
-        p = doc.add_paragraph(f"For Months : {months_text}")
-        p.paragraph_format.space_after = Pt(1)
-
+        data_info = [
+            ("Treaty Year", ":", str(year)),
+            ("Quarter", ":", str(quarter)),
+            ("For Months", ":", months_text),
+            ("Remarks", ":", remark_text)
+        ]
+        
+        for i, (label, colon, value) in enumerate(data_info):
+            info_table.cell(i, 0).text = label
+            info_table.cell(i, 1).text = colon
+            info_table.cell(i, 2).text = value
         # =========================
         # TABLE HEADER
         # =========================
@@ -757,6 +764,7 @@ st.dataframe(report_qs)
 # INPUT
 # ===============================
 start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
+remark_text = st.text_input("Remarks", value="")
 # ref_qs = st.text_input("Ref No QS")
 # ref_sp = st.text_input("Ref No SPL")
 # note = st.text_area("Note")
