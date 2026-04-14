@@ -312,9 +312,10 @@ def export_to_word_clean(df, broker_loop, file_name):
         run_left2 = p2.add_run(f"{broker}")
         run_left2.bold = True
         
-        p2.add_run("\t\t\t\t\t\t\t\t\t\t\t\t")
+        p2.add_run("\t\t\t\t\t\t\t\t\t\t")
         
         p2.add_run("PT. Asuransi Kredit Indonesia")
+        p2.add_run("\t\t\t\t\t\t\t\t\t\t")
         p2.add_run("Underwriting & Reinsurance Division")
         # 🔥 SPASI TTD
         doc.add_paragraph("")
