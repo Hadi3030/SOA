@@ -663,8 +663,8 @@ def generate_report(df, tipe, zero_option):
     rows.append(["", "GRAND TOTAL", "", *grand_total])
             
     # spasi akhir
-    rows.append(["","","","","","",""])        
-
+    rows.append(["","","","","","","",""])        
+# Tambahin disini
     return pd.DataFrame(
         rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
