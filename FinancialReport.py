@@ -673,7 +673,7 @@ def generate_report(df, tipe, zero_option):
         rows.append([f"{curr} TOTAL","","", *total_curr])
 
         # SPASI
-        rows.append(["","","","","","",""])
+        rows.append(["","","","","","","",""])
     # ============================
     # GRAND TOTAL
     # ============================
@@ -684,6 +684,12 @@ def generate_report(df, tipe, zero_option):
     # spasi akhir
     rows.append(["","","","","","","",""])        
 # Tambahin disini
+    df_result = pd.DataFrame(
+        rows,
+        columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+    )
+    
+    return df_result.fillna("")
     return pd.DataFrame(
         rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
