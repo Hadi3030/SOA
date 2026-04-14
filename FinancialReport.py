@@ -151,7 +151,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         title.paragraph_format.space_after = Pt(0)
         
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
-        info_table = doc.add_table(rows=4, cols=3)
+        info_table = doc.add_table(rows=5, cols=3)
         info_table.autofit = False
         
         # lebar kolom biar sejajar
