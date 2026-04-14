@@ -231,6 +231,8 @@ def get_quarter(m):
 
 quarter = get_quarter(max_m)
 
+has_star_year = df['PROD'].astype(str).str.contains(r'\*').any()
+
 # ===============================
 # GENERATE REPORT
 # ===============================
@@ -309,11 +311,11 @@ def generate_report(df, tipe, zero_option):
 # ===============================
 ref_qs = st.text_input("Ref No QS")
 ref_sp = st.text_input("Ref No SPL")
+remarks = st.text_area("Remarks")
 note = st.text_area("Note")
-file_name = st.text_input("Nama file", value="SOA_Report")
 
 signature_place = st.text_input("Tempat Tanda Tangan", value="Jakarta, ........")
-
+file_name = st.text_input("Nama file", value="SOA_Report")
 # ===============================
 # EXPORT MULTI BROKER
 # ===============================
@@ -369,10 +371,14 @@ if st.button("⬇️ Download All Broker"):
         ws['B8'] = f"{quarter} {tipe}"
     
         ws['A9'] = "Contract Name:"
-        ws['B9'] = "Quota Share" if tipe == "QS" else "Surplus"
+        contract_name = "Quota Share" if tipe.strip().upper() == "QS" else "Surplus"
+        ws['B9'] = contract_name
     
         ws['A10'] = "For Months   :"
         ws['B10'] = months_text
+
+        ws['A11'] = "Remarks      :"
+        ws['B11'] = remarks
     
         # ======================
         # TABLE HEADER STYLE
@@ -420,8 +426,9 @@ if st.button("⬇️ Download All Broker"):
         # NOTE
         # ======================
         last = ws.max_row + 2
-        ws[f"A{last}"] = "Note :"
-        ws[f"B{last}"] = note
+        if has_star_year:
+            ws[f"A{last}"] = "Note :"
+            ws[f"B{last}"] = note
     
         # ======================
         # FOOTER TTD (INI YANG KAMU TANYA)
@@ -449,6 +456,7 @@ if st.button("⬇️ Download All Broker"):
         brokers = df["BROKER"].dropna().unique()
         qs_start, qs_suffix = parse_ref(ref_qs)
         sp_start, sp_suffix = parse_ref(ref_sp)
+        ref_counter = qs_start  # GLOBAL SEQUENCE
         
         qs_counter = qs_start
         sp_counter = sp_start
@@ -456,15 +464,17 @@ if st.button("⬇️ Download All Broker"):
         for broker in brokers:
             df_b = df[df["BROKER"] == broker]
         
-            qs_ref = build_ref(qs_counter, qs_suffix)
-            sp_ref = build_ref(sp_counter, sp_suffix)
+            qs_ref = build_ref(ref_counter, qs_suffix)
+            ref_counter += 1
+        
+            sp_ref = build_ref(ref_counter, sp_suffix)
+            ref_counter += 1
         
             report_qs = generate_report(df_b.copy(), "QS", zero_option)
             report_sp = generate_report(df_b.copy(), "SP", zero_option)
         
-            write_sheet(writer, report_qs, f"QS_{broker}"[:31], "Quota Share", qs_ref, broker, signature_place)
-            write_sheet(writer, report_sp, f"SP_{broker}"[:31], "Surplus", sp_ref, broker, signature_place)
-        
+            write_sheet(writer, report_qs, f"QS_{broker}"[:31], "QS", qs_ref, broker, signature_place)
+            write_sheet(writer, report_sp, f"SP_{broker}"[:31], "SP", sp_ref, broker, signature_place)
             qs_counter += 1
             sp_counter += 1
 
