@@ -425,126 +425,72 @@ if st.button("⬇️ Download All Broker"):
             for col in ['D','E','F','G']:
                 ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
     
-        # NOTE + APPROVAL AREA
+        # ======================
+        # FOOTER (FINAL FIX)
         # ======================
         
         row = ws.max_row + 2
         
-        # NOTE (hanya kalau ada *)
-        if has_star_year and note:
-            ws[f"A{row}"] = "Note :"
-            ws[f"B{row}"] = note
-            row += 2  # kasih 1 baris kosong
-        
-        # Agreed line
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
-        ws.cell(row=row, column=1).value = "Agreed and approved by Reinsurance"
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
-        
-        row += 2  # spasi 1 baris
-        
-        # Jakarta line (kanan)
-        ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
-        ws.cell(row=row, column=5).value = signature_place
-        ws.cell(row=row, column=5).alignment = Alignment(horizontal="right")
-        
-        row += 1
-        
-        # COMPANY NAME (CENTER BOLD)
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
-        ws.cell(row=row, column=1).value = "PT. ASURANSI KREDIT INDONESIA"
-        ws.cell(row=row, column=1).font = Font(bold=True)
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
-        
-        row += 1
-        
-        # DIVISION
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
-        ws.cell(row=row, column=1).value = "Reinsurance Division"
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
-        
-        row += 3  # spasi 3 baris
-        
-        # SIGNATURE NAME (UNDERLINE + CENTER)
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
-        cell = ws.cell(row=row, column=1)
-        cell.value = signature_name
-        cell.alignment = Alignment(horizontal="center")
-        cell.font = Font(underline="single")
-        
-        row += 1
-        
-        # POSITION / TITLE
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
-        ws.cell(row=row, column=1).value = signature_position
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
-
         # ======================
-        # NOTE + SIGNATURE LAYOUT
-        # ======================
-        
-        row = ws.max_row + 2  # 1 baris dari tabel
-        
         # NOTE
+        # ======================
         if has_star_year and note:
             ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
             ws.cell(row=row, column=1).value = f"Note : {note}"
-            row += 2  # spasi 1 baris
+            row += 2
         
         # ======================
-        # LEFT SIDE (Agreed + Broker)
+        # LINE: AGREED + DATE
         # ======================
-        
-        # Agreed line (LEFT)
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
         ws.cell(row=row, column=1).value = "Agreed and approved by Reinsurance"
         ws.cell(row=row, column=1).alignment = Alignment(horizontal="left")
         
-        # RIGHT SIDE (Jakarta)
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         ws.cell(row=row, column=5).value = signature_place
         ws.cell(row=row, column=5).alignment = Alignment(horizontal="right")
         
-        row += 2
+        row += 1
         
-        # Broker (LEFT bawah Agreed)
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
-        ws.cell(row=row, column=1).value = broker_name
+        # ======================
+        # COMPANY ROW
+        # ======================
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
+        ws.cell(row=row, column=1).value = "ASKRINDO"
         ws.cell(row=row, column=1).font = Font(bold=True)
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal="left")
         
-        # COMPANY (CENTER RIGHT AREA)
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         ws.cell(row=row, column=5).value = "PT. ASURANSI KREDIT INDONESIA"
-        ws.cell(row=row, column=5).font = Font(bold=True)
         ws.cell(row=row, column=5).alignment = Alignment(horizontal="center")
         
         row += 1
         
+        # ======================
         # DIVISION
+        # ======================
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         ws.cell(row=row, column=5).value = "Reinsurance Division"
         ws.cell(row=row, column=5).alignment = Alignment(horizontal="center")
         
-        row += 3  # spasi sebelum tanda tangan
+        row += 2
         
-        # SIGNATURE NAME (UNDERLINE)
+        # ======================
+        # SIGNATURE NAME
+        # ======================
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         cell = ws.cell(row=row, column=5)
         cell.value = signature_name
-        cell.alignment = Alignment(horizontal="center")
         cell.font = Font(underline="single")
+        cell.alignment = Alignment(horizontal="center")
         
         row += 1
         
+        # ======================
         # POSITION
+        # ======================
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         ws.cell(row=row, column=5).value = signature_position
         ws.cell(row=row, column=5).alignment = Alignment(horizontal="center")
-    
-        # ======================
-        # FOOTER TTD (INI YANG KAMU TANYA)
-        # ======================
 
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
