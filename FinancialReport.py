@@ -136,7 +136,8 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
         ref_auto = f"{ref_number}/UDWR/{roman_quarter}/{year}"
         df_broker = df[df['BROKER'] == broker]
 
-        report = generate_report(df_broker.copy(), "QS", zero_option)
+        report = generate_report(df_broker.copy(), "QS", zero_option
+        report_sp = generate_report(df_broker.copy(), "SP", zero_option)
 
         # =========================
         # HEADER
