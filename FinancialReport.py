@@ -149,9 +149,15 @@ def export_to_word_clean(df, broker_loop, file_name):
         title.runs[0].bold = True
         # 🔥 JARAK KE BAWAH (INI KUNCI)
         title.paragraph_format.space_after = Pt(0)
+
+        # 🔥 REF NO CENTER SENDIRI
+        p_ref = doc.add_paragraph(f"Ref No : {ref_auto}")
+        p_ref.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_ref.runs[0].bold = True
+        p_ref.paragraph_format.space_after = Pt(6)
         
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
-        info_table = doc.add_table(rows=5, cols=3)
+        info_table = doc.add_table(rows=4, cols=3)
         info_table.autofit = False
         
         # lebar kolom biar sejajar
@@ -162,7 +168,6 @@ def export_to_word_clean(df, broker_loop, file_name):
         remove_table_borders(info_table)
         
         data_info = [
-            ("Ref No", ":", ref_auto),
             ("Treaty Year", ":", str(year)),
             ("Quarter", ":", str(quarter)),
             ("For Months", ":", months_text),
