@@ -288,40 +288,52 @@ def export_to_word_clean(df, broker_loop, file_name):
         # doc.add_paragraph("")
         # doc.add_paragraph(f"Note : {note}")
 
-        # TTD (KIRI + KANAN)
+        # =========================
+        # TTD FIX RAPI (TABLE)
         # =========================
         doc.add_paragraph("")
         
-        # 🔥 BARIS ATAS (KIRI & KANAN)
-        p = doc.add_paragraph()
+        ttd_table = doc.add_table(rows=2, cols=2)
+        ttd_table.autofit = False
         
-        run_left = p.add_run("Agreed and approved by Reinsurer")
-        run_left.font.size = Pt(8)
+        # lebar kolom (biar seimbang)
+        ttd_table.columns[0].width = Inches(3.5)
+        ttd_table.columns[1].width = Inches(3.5)
         
-        # kasih jarak manual biar ke kanan
-        p.add_run("\t\t\t\t\t\t\t\t\t\t")
-        report_date_str = report_date.strftime("%d %B %Y")
-        run_right = p.add_run(f"Jakarta, {report_date_str}")
-        run_right.font.size = Pt(8)
+        # 🔥 HAPUS BORDER TABLE
+        remove_table_borders(ttd_table)
         
-        # 🔥 BARIS KEDUA (KIRI & KANAN)
-        p2 = doc.add_paragraph()
+        # =========================
+        # BARIS 1
+        # =========================
+        left_cell = ttd_table.cell(0, 0)
+        right_cell = ttd_table.cell(0, 1)
         
-        run_left2 = p2.add_run(f"{broker}")
-        run_left2.bold = True
+        left_cell.text = "Agreed and approved by Reinsurer"
+        right_cell.text = f"Jakarta, {report_date.strftime('%d %B %Y')}"
         
-        p2.add_run("\t\t\t\t\t\t\t\t\t\t")
+        right_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
         
-        p2.add_run("PT. Asuransi Kredit Indonesia")
-        p2.add_run("\t\t\t\t\t\t\t\t\t\t")
-        p2.add_run("Underwriting & Reinsurance Division")
-        # 🔥 SPASI TTD
-        doc.add_paragraph("")
-        doc.add_paragraph("")
+        # =========================
+        # BARIS 2
+        # =========================
+        left_cell2 = ttd_table.cell(1, 0)
+        right_cell2 = ttd_table.cell(1, 1)
         
-        # 🔥 NAMA (KANAN)
-        ttd3 = doc.add_paragraph("Budi Santoso AI\nDivision Head")
-        ttd3.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        # kiri (broker)
+        p_left = left_cell2.paragraphs[0]
+        run = p_left.add_run(broker)
+        run.bold = True
+        
+        # kanan (company)
+        p_right = right_cell2.paragraphs[0]
+        p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        
+        p_right.add_run("PT. Asuransi Kredit Indonesia\n")
+        p_right.add_run("Underwriting & Reinsurance Division\n\n")
+        
+        run_name = p_right.add_run("Budi Santoso AI\nDivision Head")
+        run_name.bold = True
         # doc.add_paragraph("")
         # ttd = doc.add_paragraph("Jakarta, January 2026")
         # ttd.alignment = WD_ALIGN_PARAGRAPH.RIGHT
