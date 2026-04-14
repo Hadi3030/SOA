@@ -141,12 +141,15 @@ def export_to_word_clean(df, broker_loop, file_name):
 
         title = doc.add_paragraph("STATEMENT OF ACCOUNT")
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = title.runs[0]
         title.runs[0].bold = True
-
+        # 🔥 JARAK KE BAWAH (INI KUNCI)
+        title.paragraph_format.space_after = Pt(0)
+        
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
         p = doc.add_paragraph(f"Ref No : {ref_auto}")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_after = Pt(1)
+        p.paragraph_format.space_after = Pt(0)
         
         p = doc.add_paragraph(f"Treaty Year : {year}")
         p.paragraph_format.space_after = Pt(0)
@@ -155,9 +158,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         p.paragraph_format.space_after = Pt(0)
         
         p = doc.add_paragraph(f"For Months : {months_text}")
-        p.paragraph_format.space_after = Pt(2)
-
-        doc.add_paragraph("")
+        p.paragraph_format.space_after = Pt(1)
 
         # =========================
         # TABLE HEADER
@@ -165,7 +166,8 @@ def export_to_word_clean(df, broker_loop, file_name):
         table = doc.add_table(rows=1, cols=8)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False 
-        
+        # 🔥 NEMPELIN KE ATAS
+        table.space_before = Pt(0)
         # 🔥 HAPUS GRID
         remove_table_borders(table)
         
@@ -298,8 +300,7 @@ def export_to_word_clean(df, broker_loop, file_name):
 
         # =========================
         # TTD FIX RAPI (TABLE)
-        # =========================
-        doc.add_paragraph("")
+        # ========================
         
         ttd_table = doc.add_table(rows=2, cols=2)
         ttd_table.autofit = False
