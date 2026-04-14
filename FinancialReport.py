@@ -173,6 +173,17 @@ def export_to_word_clean(df, broker_loop, file_name):
             info_table.cell(i, 0).text = label
             info_table.cell(i, 1).text = colon
             info_table.cell(i, 2).text = value
+        # 🔥 TAMBAHKAN DI SINI
+        for row in info_table.rows:
+            for i, cell in enumerate(row.cells):
+                if i == 2:  # kolom value (Ref No, dll)
+                    cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # 🔥 RAPATIN SPACING (INI KUNCI)
+        for row in info_table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p.paragraph_format.space_after = Pt(0)
+                    p.paragraph_format.space_before = Pt(0)
         # =========================
         # TABLE HEADER
         # =========================
