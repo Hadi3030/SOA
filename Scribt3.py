@@ -231,8 +231,6 @@ def get_quarter(m):
 
 quarter = get_quarter(max_m)
 
-has_star_year = df['PROD'].astype(str).str.contains(r'\*').any()
-
 # ===============================
 # GENERATE REPORT
 # ===============================
@@ -336,7 +334,10 @@ if st.button("⬇️ Download All Broker"):
 
         data.to_excel(writer, index=False, sheet_name=name, startrow=12)
         ws = writer.sheets[name]
-    
+        has_star_year = any(
+            "*" in str(x)
+            for x in data["UW YEAR"].values
+        )
         # ======================
         # LOGO
         # ======================
@@ -426,7 +427,7 @@ if st.button("⬇️ Download All Broker"):
         # NOTE
         # ======================
         last = ws.max_row + 2
-        if has_star_year:
+        if has_star_year and note:
             ws[f"A{last}"] = "Note :"
             ws[f"B{last}"] = note
     
