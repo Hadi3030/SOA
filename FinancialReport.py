@@ -799,13 +799,6 @@ file_name = st.text_input("Nama file", value="SOA_Report")
 sign_name = st.text_input("Nama Penandatangan", value="Budi Santoso AI")
 sign_position = st.text_input("Jabatan", value="Division Head")
 
-st.subheader("Pilih Format Download")
-
-export_format = st.selectbox(
-    "Format File",
-    ["Excel (.xlsx)", "Word (.docx)", "PDF (.pdf)"]
-)
-
 # ===============================
 # EXPORT
 # ===============================
