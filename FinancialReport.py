@@ -162,6 +162,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         remove_table_borders(info_table)
         
         data_info = [
+            ("Ref No", ":", ref_auto),
             ("Treaty Year", ":", str(year)),
             ("Quarter", ":", str(quarter)),
             ("For Months", ":", months_text),
