@@ -110,7 +110,7 @@ def set_row_border_full(cells):
 
         tcPr.append(tcBorders)
 
-def export_to_word_clean(df, broker_loop, file_name):
+def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
 
     doc = Document()
     from docx.shared import Mm
@@ -171,7 +171,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         
         data_info = [
             ("Treaty Year", ":", str(year)),
-            ("Quarter", ":", str(quarter)),
+            ("Quarter", ":", quarter_qs),
             ("For Months", ":", months_text),
             ("Remarks", ":", remark_text)
         ]
@@ -1072,7 +1072,13 @@ if st.button("⬇️ Generate & Download"):
     # WORD
     # =========================
     elif export_format == "Word (.docx)":
-        file_stream = export_to_word_clean(df, broker_loop, file_name)
+        file_stream = export_to_word_clean(
+            df,
+            broker_loop,
+            file_name,
+            quarter_qs,
+            quarter_sp
+        )
 
         st.download_button(
             "⬇️ Download Word",
