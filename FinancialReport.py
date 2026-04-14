@@ -195,6 +195,9 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
         # =========================
         # TABLE HEADER
         # =========================
+        doc.add_paragraph("")
+        p_qs = doc.add_paragraph("STATEMENT OF ACCOUNT - QUOTA SHARE")
+        p_qs.runs[0].bold = True
         table = doc.add_table(rows=1, cols=8)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False 
@@ -324,6 +327,42 @@ def export_to_word_clean(df, broker_loop, file_name, quarter_qs, quarter_sp):
                 for p in cell.paragraphs:
                     p.paragraph_format.space_after = Pt(0)
 
+        # =========================
+        # SP SECTION (🔥 INI YANG KURANG)
+        # =========================
+        doc.add_paragraph("")
+        p_sp = doc.add_paragraph("STATEMENT OF ACCOUNT - SURPLUS")
+        p_sp.runs[0].bold = True
+        
+        table_sp = doc.add_table(rows=1, cols=8)
+        table_sp.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table_sp.autofit = False
+        
+        # header sama
+        headers = ['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
+        
+        for i, h in enumerate(headers):
+            cell = table_sp.rows[0].cells[i]
+            cell.text = h
+            set_cell_bg(cell, "000000")
+        
+        # 🔥 LOOP SP (INI YANG PENTING)
+        for _, row in report_sp.iterrows():
+            cells = table_sp.add_row().cells
+        
+            for i, val in enumerate(row):
+                text, is_negative = format_number(val) if i >= 3 else (str(val), False)
+                cells[i].text = text
+        
+                para = cells[i].paragraphs[0]
+        
+                if i >= 3:
+                    para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                elif i == 2:
+                    para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:
+                    para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        
         # # =========================
         # # NOTE
         # # =========================
