@@ -26,6 +26,8 @@ def prevent_text_wrap(cell):
     # 🔥 tambahan penting
     for paragraph in cell.paragraphs:
         paragraph.paragraph_format.keep_together = True
+        paragraph.paragraph_format.keep_with_next = True
+        paragraph.paragraph_format.line_spacing = 1
         
 def remove_table_borders(table):
     tbl = table._element
@@ -201,7 +203,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         remove_table_borders(table)
         
         # 🔥 SET LEBAR KOLOM
-        col_widths = [1, 3.5, 0.7, 1.1, 1.1, 1.1, 1.1, 1.1]
+        col_widths = [1, 4.5, 0.7, 1, 1, 1, 1, 1]
 
         for i, width in enumerate(col_widths):
             for row in table.rows:
