@@ -320,7 +320,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         left_cell.text = "Agreed and approved by Reinsurer"
         right_cell.text = f"Jakarta, {report_date.strftime('%d %B %Y')}"
         
-        right_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        right_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
         
         # =========================
         # BARIS 2
@@ -334,28 +334,58 @@ def export_to_word_clean(df, broker_loop, file_name):
         run.bold = True
         
         # kanan (company)
-        p_right = right_cell2.paragraphs[0]
-        p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        
-        p_right.add_run("PT. Asuransi Kredit Indonesia\n")
-        p_right.add_run("Underwriting & Reinsurance Division\n\n")
-        
-        run_name = p_right.add_run("Budi Santoso AI\nDivision Head")
-        run_name.bold = True
-        # doc.add_paragraph("")
-        # ttd = doc.add_paragraph("Jakarta, January 2026")
-        # ttd.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        # ttd2 = doc.add_paragraph("PT. Asuransi Kredit Indonesia\nUnderwriting & Reinsurance Division")
-        # ttd2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        # doc.add_paragraph("")
-        # ttd3 = doc.add_paragraph("Budi Santoso AI\nDivision Head")
-        # ttd3.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
         # =========================
-        # PAGE BREAK
+        # BARIS 1 (KANAN - JAKARTA)
         # =========================
+        right_cell = ttd_table.cell(0, 1)
+        p_top = right_cell.paragraphs[0]
+        p_top.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_top.text = f"Jakarta, {report_date.strftime('%d %B %Y')}"
+        
+        # =========================
+        # BARIS 2 (KANAN - BLOK TTD)
+        # =========================
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+        
+        right_cell2 = ttd_table.cell(1, 1)
+        
+        # =========================
+        # PARAGRAPH 1 (COMPANY)
+        # =========================
+        p1 = right_cell2.paragraphs[0]
+        p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p1.add_run("PT. Asuransi Kredit Indonesia\n")
+        p1.add_run("Underwriting & Reinsurance Division\n\n")
+        
+        # =========================
+        # PARAGRAPH 2 (GARIS TTD)
+        # =========================
+        p_line = right_cell2.add_paragraph()
+        p_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # 🔥 GARIS (BOTTOM BORDER)
+        pPr = p_line._element.get_or_add_pPr()
+        pBdr = OxmlElement('w:pBdr')
+        bottom = OxmlElement('w:bottom')
+        bottom.set(qn('w:val'), 'single')
+        bottom.set(qn('w:sz'), '12')   # ketebalan garis
+        bottom.set(qn('w:space'), '1')
+        bottom.set(qn('w:color'), '000000')
+        pBdr.append(bottom)
+        pPr.append(pBdr)
+        
+        # kasih spasi biar garis agak panjang
+        p_line.add_run(" " * 30)
+        
+        # =========================
+        # PARAGRAPH 3 (NAMA + JABATAN)
+        # =========================
+        p_name = right_cell2.add_paragraph()
+        p_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        run_name = p_name.add_run(f"{sign_name}\n{sign_position}")
+        run_name.bold = True       
         if idx < len(broker_loop) - 1:
             doc.add_page_break()
 
@@ -746,6 +776,9 @@ start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
 import datetime
 report_date = st.date_input("Tanggal Penandatanganan", datetime.date.today())
 file_name = st.text_input("Nama file", value="SOA_Report")
+
+sign_name = st.text_input("Nama Penandatangan", value="Budi Santoso AI")
+sign_position = st.text_input("Jabatan", value="Division Head")
 
 # ===============================
 # EXPORT
