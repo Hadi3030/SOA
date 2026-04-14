@@ -155,7 +155,7 @@ def export_to_word_clean(df, broker_loop, file_name):
         # 🔥 REF NO CENTER SENDIRI
         p_ref = doc.add_paragraph(f"Ref No : {ref_auto}")
         p_ref.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_ref.runs[0].bold = True
+        # p_ref.runs[0].bold = True
         p_ref.paragraph_format.space_after = Pt(6)
         
         # 🔥 REF NO DI TENGAH (TEPAT DI BAWAH TITLE)
