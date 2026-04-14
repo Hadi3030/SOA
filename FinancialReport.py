@@ -355,7 +355,8 @@ def export_to_word_clean(df, broker_loop, file_name):
         # =========================
         p1 = right_cell2.paragraphs[0]
         p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p1.add_run("PT. Asuransi Kredit Indonesia\n")
+        run_company = p1.add_run("PT. Asuransi Kredit Indonesia\n")
+        run_company.bold = True
         p1.add_run("Underwriting & Reinsurance Division\n\n")
         
         # =========================
