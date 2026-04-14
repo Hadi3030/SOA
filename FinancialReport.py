@@ -788,6 +788,8 @@ st.dataframe(report_qs)
 # INPUT
 # ===============================
 start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
+quarter_qs = st.selectbox("Quarter QS", ["I", "II", "III", "IV"])
+quarter_sp = st.selectbox("Quarter SP", ["I", "II", "III", "IV"])
 remark_text = st.text_input("Remarks", value="")
 # ref_qs = st.text_input("Ref No QS")
 # ref_sp = st.text_input("Ref No SPL")
@@ -812,7 +814,7 @@ grey_fill = PatternFill("solid", fgColor="D9D9D9")
 white_fill = PatternFill("solid", fgColor="FFFFFF")
 no_border = Border()
 
-def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp):
+def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, ref_sp, quarter_qs, quarter_sp):
 
     qs_start = 12
     sp_start = qs_start + len(qs_data) + 15
@@ -850,8 +852,8 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     ws['A5'].alignment = Alignment(horizontal='center')
     
     ws['A7'] = "Treaty Year  :"; ws['B7'] = year
-    ws['B8'] = f"{quarter} {format_quarter_text('QS')}"
-    ws[f"B{title_row+4}"] = f"{quarter} {format_quarter_text('SP')}"
+    ws['B8'] = f"{quarter_qs} {format_quarter_text('QS')}"
+    ws[f"B{title_row+4}"] = f"{quarter_sp} {format_quarter_text('SP')}"
     
 
     # ===============================
@@ -872,7 +874,7 @@ def write_combined_sheet(writer, qs_data, sp_data, sheet_name, broker, ref_qs, r
     ws[f'A{title_row+1}'].alignment = Alignment(horizontal='center')
     
     ws[f"A{title_row+3}"] = "Treaty Year  :"; ws[f"B{title_row+3}"] = year
-    ws[f"A{title_row+4}"] = "Quarter      :"; ws[f"B{title_row+4}"] = f"{quarter} SP"
+    ws[f"A{title_row+4}"] = "Quarter      :"; ws[f"B{title_row+4}"] = f"{quarter_sp} SP"
     ws[f"A{title_row+5}"] = "For Months   :"; ws[f"B{title_row+5}"] = months_text
     ws[f"A{title_row+6}"] = "Broker       :"; ws[f"B{title_row+6}"] = broker
 
@@ -992,7 +994,9 @@ with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 sheet_name=str(broker)[:31],
                 broker=broker,
                 ref_qs=ref_qs,
-                ref_sp=ref_sp
+                ref_sp=ref_sp,
+                quarter_qs=quarter_qs,
+                quarter_sp=quarter_sp
             )
         
     # for broker in broker_loop:
