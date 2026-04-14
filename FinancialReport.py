@@ -64,26 +64,44 @@ def set_row_border(cells):
             tcBorders.append(border)
 
         tcPr.append(tcBorders)
-# def set_row_border(cells):
-#                 from docx.oxml import OxmlElement
-#                 from docx.oxml.ns import qn
-            
-#                 for cell in cells:
-#                     tc = cell._element
-#                     tcPr = tc.get_or_add_tcPr()
-            
-#                     tcBorders = OxmlElement('w:tcBorders')
-            
-#                     for border_name in ['top', 'bottom']:
-#                         border = OxmlElement(f'w:{border_name}')
-#                         border.set(qn('w:val'), 'single')
-#                         border.set(qn('w:sz'), '12')  # 🔥 tebal
-#                         border.set(qn('w:space'), '0')
-#                         border.set(qn('w:color'), '000000')
-#                         tcBorders.append(border)
-            
-#                     tcPr.append(tcBorders)
 
+def set_row_border_cob(cells):
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    for cell in cells[1:]:  # mulai dari COB
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
+
+def set_row_border_full(cells):
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    for cell in cells:  # semua kolom
+        tc = cell._element
+        tcPr = tc.get_or_add_tcPr()
+
+        tcBorders = OxmlElement('w:tcBorders')
+
+        for border_name in ['top', 'bottom']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), '12')
+            border.set(qn('w:color'), '000000')
+            tcBorders.append(border)
+
+        tcPr.append(tcBorders)
 
 def export_to_word_clean(df, broker_loop, file_name):
 
