@@ -788,8 +788,8 @@ st.dataframe(report_qs)
 # INPUT
 # ===============================
 start_number = st.number_input("Nomor Awal Ref No", value=81, step=1)
-quarter_qs = st.selectbox("Quarter QS", ["I", "II", "III", "IV"])
-quarter_sp = st.selectbox("Quarter SP", ["I", "II", "III", "IV"])
+quarter_qs = st.selectbox("Quarter QS", ["I Quota Share", "II Quota Share", "III Quota Share", "IV Quota Share"])
+quarter_sp = st.selectbox("Quarter SP", ["I Surplus", "II Surplus", "III Surplus", "IV Surplus"])
 remark_text = st.text_input("Remarks", value="")
 # ref_qs = st.text_input("Ref No QS")
 # ref_sp = st.text_input("Ref No SPL")
