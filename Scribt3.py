@@ -358,7 +358,8 @@ if st.button("⬇️ Download All Broker"):
         ws['A4'] = "STATEMENT OF ACCOUNT"
         ws['A4'].font = Font(bold=True, size=14)
         ws['A4'].alignment = Alignment(horizontal='center')
-    
+
+        
         ws.merge_cells('A5:G5')
         ws['A5'] = f"Ref No. {ref}"
         ws['A5'].font = Font(bold=True)
