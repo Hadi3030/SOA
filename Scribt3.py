@@ -226,10 +226,10 @@ year = int(df['YEAR'].mode()[0])
 
 months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
-def get_quarter(m):
-    return ["I","II","III","IV"][(m-1)//3]
+# def get_quarter(m):
+#     return ["I","II","III","IV"][(m-1)//3]
 
-quarter = get_quarter(max_m)
+# quarter = get_quarter(max_m)
 
 # ===============================
 # GENERATE REPORT
@@ -307,6 +307,10 @@ def generate_report(df, tipe, zero_option):
 # ===============================
 # INPUT USER
 # ===============================
+quarter = st.selectbox(
+    "Pilih Quarter",
+    ["I", "II", "III", "IV"]
+)
 ref_qs = st.text_input("Ref No QS")
 ref_sp = st.text_input("Ref No SPL")
 remarks = st.text_area("Remarks")
