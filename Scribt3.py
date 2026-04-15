@@ -59,14 +59,15 @@ mapping = {
     'broker':'BROKER',
     'qs_ceding':'QS_CEDING','sp_ceding':'SP_CEDING',
     'komisi_qs':'KOMISI_QS','komisi_sp':'KOMISI_SP',
-    'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP'
+    'klaim_qs':'KLAIM_QS','klaim_sp':'KLAIM_SP',
+    'keterangan soa / long term / pa plus': 'KETERANGAN'
 }
 df = df.rename(columns=mapping)
 
 # ===============================
 # FIX TEXT
 # ===============================
-for col in ['CURRENCY', 'COB', 'BROKER']:
+for col in ['CURRENCY', 'COB', 'BROKER', 'KETERANGAN']:
     if col in df.columns:
         df[col] = df[col].astype(str).str.strip().str.upper()
 
@@ -127,18 +128,23 @@ if "UY" in df.columns:
     ]
 
     df = df[df["UY"].isin(selected_uy)]
-
+    
 # ===============================
-# FILTER LT
+# FILTER LT SOA PA Plus
 # ===============================
-lt_option = st.selectbox("Filter Long Term", ["ALL", "LT", "NON-LT"])
 
-if lt_option != "ALL":
-    if lt_option == "LT":
-        df = df[df['COB'].str.contains("LT", na=False)]
-    else:
-        df = df[~df['COB'].str.contains("LT", na=False)]
 
+st.subheader("Filter Keterangan")
+
+ket_option = st.selectbox(
+    "Pilih Kategori",
+    ["ALL", "LT", "SOA", "PA PLUS"]
+)
+
+if "KETERANGAN" in df.columns:
+    if ket_option != "ALL":
+        df = df[df['KETERANGAN'] == ket_option]
+        
 zero_option = st.selectbox(
     "Tampilkan Baris Nol",
     ["Show All", "Hide Zero Rows"]
