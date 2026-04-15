@@ -362,7 +362,7 @@ if st.button("⬇️ Download All Broker"):
         
         ws.merge_cells('A5:G5')
         ws['A5'] = f"Ref No. {ref}"
-        ws['A5'].font = Font(bold=True)
+        # ws['A5'].font = Font(bold=True)
         ws['A5'].alignment = Alignment(horizontal='center')
     
         # ======================
