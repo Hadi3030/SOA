@@ -369,7 +369,7 @@ if st.button("⬇️ Download All Broker"):
         # HEADER INFO
         # ======================
         contract_name = "Quota Share" if tipe.strip().upper() == "QS" else "Surplus"
-        
+
         headers = [
             ("Treaty Year", year),
             ("Quarter", f"{quarter} {tipe}"),
@@ -383,10 +383,9 @@ if st.button("⬇️ Download All Broker"):
         for i, (label, value) in enumerate(headers):
             r = start_row + i
             
-            ws[f"A{r}"] = f"{label} :"
-            ws[f"B{r}"] = value
+            ws[f"A{r}"] = label
+            ws[f"B{r}"] = f": {value}"   # 👉 titik dua + value jadi satu cell
         
-            # rata kiri semua
             ws[f"A{r}"].alignment = Alignment(horizontal="left")
             ws[f"B{r}"].alignment = Alignment(horizontal="left")
     
@@ -474,7 +473,7 @@ if st.button("⬇️ Download All Broker"):
         
         ws.merge_cells(start_row=row, start_column=5, end_row=row, end_column=7)
         ws.cell(row=row, column=5).value = signature_place
-        ws.cell(row=row, column=5).alignment = Alignment(horizontal="right")
+        ws.cell(row=row, column=5).alignment = Alignment(horizontal="center")
         
         row += 1
         
