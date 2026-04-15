@@ -476,6 +476,28 @@ if st.button("⬇️ Download All Broker"):
         # ======================
         ws.page_setup.fitToWidth = 1
         ws.page_setup.fitToHeight = False
+
+        # ======================
+        # OPTIMASI PRINT (BIAR GAK KE POTONG PDF)
+        # ======================
+        
+        from openpyxl.worksheet.page import PageSetupProperties
+        
+        # paksa fit ke 1 halaman lebar
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = False
+        
+        # margin diperkecil (biar lebih lebar ke samping)
+        ws.page_margins.left = 0.25
+        ws.page_margins.right = 0.25
+        ws.page_margins.top = 0.5
+        ws.page_margins.bottom = 0.5
+        
+        # center ke tengah horizontal
+        ws.print_options.horizontalCentered = True
+        
+        # scaling tambahan (optional tapi bagus)
+        ws.page_setup.scale = 90  # bisa 85–95 kalau masih kepotong
         # ======================
         # FOOTER (FINAL FIX)
         # ======================
