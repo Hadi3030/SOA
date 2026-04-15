@@ -454,7 +454,7 @@ if st.button("⬇️ Download All Broker"):
         # FOOTER (FINAL FIX)
         # ======================
         
-        row = ws.max_row + 2
+        row = ws.max_row + 1
         
         # ======================
         # NOTE
@@ -462,7 +462,7 @@ if st.button("⬇️ Download All Broker"):
         if has_star_year and note:
             ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
             ws.cell(row=row, column=1).value = f"Note : {note}"
-            row += 2
+            row += 1
         
         # ======================
         # LINE: AGREED + DATE
