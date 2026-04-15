@@ -367,21 +367,25 @@ if st.button("⬇️ Download All Broker"):
         # ======================
         # HEADER INFO
         # ======================
-        ws['A7'] = "Treaty Year  :"
-        ws['B7'] = year
-    
-        ws['A8'] = "Quarter      :"
-        ws['B8'] = f"{quarter} {tipe}"
-    
-        ws['A9'] = "Contract Name:"
-        contract_name = "Quota Share" if tipe.strip().upper() == "QS" else "Surplus"
-        ws['B9'] = contract_name
-    
-        ws['A10'] = "For Months   :"
-        ws['B10'] = months_text
-
-        ws['A11'] = "Remarks      :"
-        ws['B11'] = remarks
+        headers = [
+            ("Treaty Year", year),
+            ("Quarter", f"{quarter} {tipe}"),
+            ("Contract Name", contract_name),
+            ("For Months", months_text),
+            ("Remarks", remarks),
+        ]
+        
+        start_row = 7
+        
+        for i, (label, value) in enumerate(headers):
+            r = start_row + i
+            
+            ws[f"A{r}"] = f"{label} :"
+            ws[f"B{r}"] = value
+        
+            # rata kiri semua
+            ws[f"A{r}"].alignment = Alignment(horizontal="left")
+            ws[f"B{r}"].alignment = Alignment(horizontal="left")
     
         # ======================
         # TABLE HEADER STYLE
@@ -417,9 +421,28 @@ if st.button("⬇️ Download All Broker"):
             if current_currency:
                 ws[f"A{row}"].fill = grey_fill
     
-            if val_curr and "TOTAL" in str(val_curr):
+            # if val_curr and "TOTAL" in str(val_curr):
+            #     for col in "ABCDEFG":
+            #         ws[f"{col}{row}"].fill = grey_fill
+            #     current_currency = None
+            row_values = [ws[f"{col}{row}"].value for col in "ABCDEFG"]
+
+            is_total = any("TOTAL" in str(v) for v in row_values if v)
+            
+            # cek apakah ini currency total (kolom A ada isinya dan mengandung TOTAL)
+            is_currency_total = (
+                ws[f"A{row}"].value is not None
+                and "TOTAL" in str(ws[f"A{row}"].value)
+            )
+            
+            if is_total:
                 for col in "ABCDEFG":
                     ws[f"{col}{row}"].fill = grey_fill
+                    
+                    # 👉 hanya currency TOTAL yang bold
+                    if is_currency_total:
+                        ws[f"{col}{row}"].font = Font(bold=True)
+            
                 current_currency = None
     
             for col in ['D','E','F','G']:
