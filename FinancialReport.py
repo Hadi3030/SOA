@@ -161,6 +161,27 @@ def generate_report(df, tipe, zero_option):
         rows,
         columns=['CURRENCY','COB','UW YEAR','PREMIUM','COMMISSION','CLAIM','RECOVERY','AMOUNT']
     )
+import re
+
+def parse_ref(ref):
+    match = re.match(r"(\d+)(/.+)", ref)
+    if match:
+        return int(match.group(1)), match.group(2)
+    return 1, ""
+
+def build_ref(num, suffix):
+    return f"{num}{suffix}"
+
+# ===============================
+# INPUT USER
+# ===============================
+st.subheader("Header Info")
+
+treaty_year_input = st.text_input("Treaty Year", value=str(year))
+quarter_input = st.selectbox("Quarter", ["I","II","III","IV"])
+remarks_input = st.text_input("Remarks", value="-")
+
+ref_input = st.text_input("Ref No Awal (contoh: 83/UDWR/III/2025)")
 
 # ===============================
 # EXPORT EXCEL ONLY
@@ -171,30 +192,63 @@ if st.button("⬇️ Generate Excel"):
 
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
 
+        # 🔥 TARUH DI SINI (SEBELUM LOOP)
+        start_num, suffix = parse_ref(ref_input)
+        ref_counter = start_num
+    
         for broker in selected_broker:
-
+    
             df_b = df[df["BROKER"] == broker]
-
+    
             qs = generate_report(df_b.copy(), "QS", zero_option)
             sp = generate_report(df_b.copy(), "SP", zero_option)
-
+    
             sheet_name = str(broker)[:31]
-            qs.to_excel(writer, sheet_name=sheet_name, startrow=10, index=False)
-
+    
+            # ======================
+            # QS REF
+            # ======================
+            ref_qs = build_ref(ref_counter, suffix)
+            ref_counter += 1
+    
+            qs.to_excel(writer, sheet_name=sheet_name, startrow=12, index=False)
             ws = writer.sheets[sheet_name]
 
             # ===============================
-            # TITLE QS
+            # TITLE
             # ===============================
-            ws.merge_cells('A2:H2')
-            ws['A2'] = "STATEMENT OF ACCOUNT - QUOTA SHARE"
-            ws['A2'].font = Font(bold=True, size=14)
-            ws['A2'].alignment = Alignment(horizontal='center')
-
-            ws['A4'] = "Treaty Year"; ws['B4'] = year
-            ws['A5'] = "For Months"; ws['B5'] = months_text
-            ws['A6'] = "Broker"; ws['B6'] = broker
-
+            ws.merge_cells('A4:H4')
+            ws['A4'] = "STATEMENT OF ACCOUNT"
+            ws['A4'].font = Font(bold=True, size=14)
+            ws['A4'].alignment = Alignment(horizontal='center')
+            
+            ws.merge_cells('A5:H5')
+            ws['A5'] = f"Ref No. {ref_qs}"
+            ws['A5'].alignment = Alignment(horizontal='center')
+            
+            # ===============================
+            # HEADER INFO (RAPI SEJAJAR)
+            # ===============================
+            contract_name_qs = "Quota Share"
+            
+            headers = [
+                ("Treaty Year", treaty_year_input),
+                ("Quarter", quarter_input),
+                ("Contract Name", contract_name_qs),
+                ("For Months", months_text),
+                ("Remarks", remarks_input),
+            ]
+            
+            start_row = 7
+            
+            for i, (label, value) in enumerate(headers):
+                r = start_row + i
+            
+                ws[f"A{r}"] = label
+                ws[f"B{r}"] = f": {value}"
+            
+                ws[f"A{r}"].alignment = Alignment(horizontal="left")
+                ws[f"B{r}"].alignment = Alignment(horizontal="left")
             # ===============================
             # TTD QS
             # ===============================
@@ -203,6 +257,42 @@ if st.button("⬇️ Generate Excel"):
             ws[f"E{end_qs}"] = "Jakarta"
             ws[f"E{end_qs+2}"] = "PT. Asuransi Kredit Indonesia"
             ws[f"E{end_qs+5}"] = "Authorized Signatory"
+
+            # ===============================
+            # TITLE
+            # ===============================
+            ws.merge_cells('A4:H4')
+            ws['A4'] = "STATEMENT OF ACCOUNT"
+            ws['A4'].font = Font(bold=True, size=14)
+            ws['A4'].alignment = Alignment(horizontal='center')
+            
+            ws.merge_cells('A5:H5')
+            ws['A5'] = f"Ref No. {ref_qs}"
+            ws['A5'].alignment = Alignment(horizontal='center')
+            
+            # ===============================
+            # HEADER INFO (RAPI SEJAJAR)
+            # ===============================
+            contract_name_qs = "Quota Share"
+            
+            headers = [
+                ("Treaty Year", treaty_year_input),
+                ("Quarter", quarter_input),
+                ("Contract Name", contract_name_qs),
+                ("For Months", months_text),
+                ("Remarks", remarks_input),
+            ]
+            
+            start_row = 7
+            
+            for i, (label, value) in enumerate(headers):
+                r = start_row + i
+            
+                ws[f"A{r}"] = label
+                ws[f"B{r}"] = f": {value}"
+            
+                ws[f"A{r}"].alignment = Alignment(horizontal="left")
+                ws[f"B{r}"].alignment = Alignment(horizontal="left")
 
             # ===============================
             # SP SECTION
