@@ -80,9 +80,8 @@ if "UY" in df.columns:
     df['UY_ORIGINAL'] = df['UY'].astype(str)
     df['UY_FLAG'] = df['UY_ORIGINAL'].str.contains(r'\*')
 
-    # untuk perhitungan (hapus *)
-    df['UY'] = df['UY_ORIGINAL'].str.replace(r'\*', '', regex=True)
-    df['UY'] = pd.to_numeric(df['UY'], errors='coerce')
+    # HAPUS * tapi tetap string
+    df['UY'] = df['UY_ORIGINAL'].str.replace(r'\*', '', regex=True).str.strip()
 
     # untuk tampilan
     df['UY_DISPLAY'] = df['UY_ORIGINAL']
