@@ -326,7 +326,7 @@ if st.button("⬇️ Download All Broker"):
     from openpyxl.styles import Font, Alignment, PatternFill, Border
     from openpyxl.drawing.image import Image
 
-    header_fill = PatternFill("solid", fgColor="000000")
+    header_fill = PatternFill(fill_type="solid", start_color="FF000000", end_color="FF000000")
     grey_fill = PatternFill("solid", fgColor="D9D9D9")
     white_fill = PatternFill("solid", fgColor="FFFFFF")
     no_border = Border()
@@ -389,8 +389,7 @@ if st.button("⬇️ Download All Broker"):
         # TABLE HEADER STYLE
         # ======================
         header_fill = PatternFill("solid", fgColor="000000")
-        from openpyxl.styles import Color
-        header_font = Font(color=Color(rgb="FFFFFFFF"), bold=True)
+        header_font = Font(color="FFFFFFFF", bold=True)
     
         for col in range(1, 8):
             cell = ws.cell(row=13, column=col)
@@ -434,13 +433,10 @@ if st.button("⬇️ Download All Broker"):
                 and "TOTAL" in str(ws[f"A{row}"].value)
             )
             
-            if is_total:
+            if is_currency_total:
                 for col in "ABCDEFG":
                     ws[f"{col}{row}"].fill = grey_fill
-                    
-                    # 👉 hanya currency TOTAL yang bold
-                    if is_currency_total:
-                        ws[f"{col}{row}"].font = Font(bold=True)
+                    ws[f"{col}{row}"].font = Font(bold=True)
             
                 current_currency = None
     
