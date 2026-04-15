@@ -481,11 +481,8 @@ if st.button("⬇️ Download All Broker"):
         # OPTIMASI PRINT (BIAR GAK KE POTONG PDF)
         # ======================
         
-        from openpyxl.worksheet.page import PageSetupProperties
+        # from openpyxl.worksheet.page import PageSetupProperties
         
-        # paksa fit ke 1 halaman lebar
-        ws.page_setup.fitToWidth = 1
-        ws.page_setup.fitToHeight = False
         
         # margin diperkecil (biar lebih lebar ke samping)
         ws.page_margins.left = 0.25
