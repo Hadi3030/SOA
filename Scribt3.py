@@ -389,7 +389,8 @@ if st.button("⬇️ Download All Broker"):
         # TABLE HEADER STYLE
         # ======================
         header_fill = PatternFill("solid", fgColor="000000")
-        header_font = Font(color="FFFFFF", bold=True)
+        from openpyxl.styles import Color
+        header_font = Font(color=Color(rgb="FFFFFFFF"), bold=True)
     
         for col in range(1, 8):
             cell = ws.cell(row=13, column=col)
@@ -461,11 +462,19 @@ if st.button("⬇️ Download All Broker"):
                     except:
                         pass
         
-                adjusted_width = min(max_length + 2, 35)
+                adjusted_width = min(max_length + 2, 20)
                 ws.column_dimensions[col_letter].width = adjusted_width
         
         # jalankan auto width
         auto_adjust_column_width(ws)
+                # KOLOM FIX BIAR GAK KELEBARAN
+        ws.column_dimensions['A'].width = 12  # Currency
+        ws.column_dimensions['B'].width = 20  # COB
+        ws.column_dimensions['C'].width = 10  # UW Year
+        ws.column_dimensions['D'].width = 16
+        ws.column_dimensions['E'].width = 16
+        ws.column_dimensions['F'].width = 16
+        ws.column_dimensions['G'].width = 16
         
         # fix khusus kolom angka biar gak jadi #####
         for col in ['D','E','F','G']:
@@ -474,25 +483,26 @@ if st.button("⬇️ Download All Broker"):
         # ======================
         # SET PRINT BIAR SIAP PDF
         # ======================
+        
+        # PRINT AREA (WAJIB)
+        ws.print_title_rows = '1:13'
+        ws.print_area = f"A1:G{ws.max_row}"
+        
+        # FIT KE 1 HALAMAN LEBAR
         ws.page_setup.fitToWidth = 1
         ws.page_setup.fitToHeight = False
-
-        # ======================
-        # OPTIMASI PRINT (BIAR GAK KE POTONG PDF)
-        # ======================
         
-        # from openpyxl.worksheet.page import PageSetupProperties
+        # SCALE BIAR MASUK
+        ws.page_setup.scale = 85
         
-        
-        # margin diperkecil (biar lebih lebar ke samping)
+        # MARGIN BIAR LEBIH LEBAR KE SAMPING
         ws.page_margins.left = 0.25
         ws.page_margins.right = 0.25
         ws.page_margins.top = 0.5
         ws.page_margins.bottom = 0.5
         
-        # center ke tengah horizontal
-        ws.print_options.horizontalCentered = True
-        
+        # CENTER BIAR RAPI
+        ws.print_options.horizontalCentered = True        
         # scaling tambahan (optional tapi bagus)
         ws.page_setup.scale = 90  # bisa 85–95 kalau masih kepotong
         # ======================
