@@ -319,6 +319,8 @@ quarter = st.selectbox(
 )
 ref_qs = st.text_input("Ref No QS")
 ref_sp = st.text_input("Ref No SPL")
+treaty_year_input = st.text_input("Treaty Year", value=str(year))
+months_input = st.text_input("For Months", value=months_text)
 remarks = st.text_area("Remarks")
 note = st.text_area("Note")
 
@@ -377,10 +379,10 @@ if st.button("⬇️ Download All Broker"):
         contract_name = "Quota Share" if tipe.strip().upper() == "QS" else "Surplus"
 
         headers = [
-            ("Treaty Year", year),
+            ("Treaty Year", treaty_year_input),
             ("Quarter", quarter),
             ("Contract Name", contract_name),
-            ("For Months", months_text),
+            ("For Months", months_input),
             ("Remarks", remarks),
         ]
         
