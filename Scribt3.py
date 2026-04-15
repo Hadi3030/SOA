@@ -368,7 +368,7 @@ if st.button("⬇️ Download All Broker"):
 
         headers = [
             ("Treaty Year", year),
-            ("Quarter", f"{quarter} {tipe}"),
+            ("Quarter", quarter),
             ("Contract Name", contract_name),
             ("For Months", months_text),
             ("Remarks", remarks),
