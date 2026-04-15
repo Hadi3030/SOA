@@ -392,7 +392,12 @@ if st.button("⬇️ Download All Broker"):
         # ======================
         # TABLE HEADER STYLE
         # ======================
-        header_fill = PatternFill("solid", fgColor="000000")
+        header_fill = PatternFill(
+            fill_type="solid",
+            start_color="FF000000",
+            end_color="FF000000"
+        )
+        
         header_font = Font(color="FFFFFFFF", bold=True)
     
         for col in range(1, 8):
