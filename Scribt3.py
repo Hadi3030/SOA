@@ -368,6 +368,8 @@ if st.button("⬇️ Download All Broker"):
         # ======================
         # HEADER INFO
         # ======================
+        contract_name = "Quota Share" if tipe.strip().upper() == "QS" else "Surplus"
+        
         headers = [
             ("Treaty Year", year),
             ("Quarter", f"{quarter} {tipe}"),
