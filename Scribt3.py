@@ -341,15 +341,11 @@ if st.button("⬇️ Download All Broker"):
             for x in data["UW YEAR"].values
         )
         # ======================
-        # LOGO
+        # KOSONGKAN AREA HEADER (UNTUK KOP SURAT)
         # ======================
-        try:
-            logo = Image("askrindo.jpg")
-            logo.height = 60
-            logo.width = 140
-            ws.add_image(logo, "A1")
-        except:
-            pass
+        ws.row_dimensions[1].height = 25
+        ws.row_dimensions[2].height = 25
+        ws.row_dimensions[3].height = 25
     
         # ======================
         # TITLE
