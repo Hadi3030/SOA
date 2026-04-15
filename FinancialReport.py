@@ -182,6 +182,7 @@ quarter_input = st.selectbox("Quarter", ["I","II","III","IV"])
 remarks_input = st.text_input("Remarks", value="-")
 
 ref_input = st.text_input("Ref No Awal (contoh: 83/UDWR/III/2025)")
+file_name_input = st.text_input("Nama File Output", value="SOA_REPORT")
 
 # ===============================
 # EXPORT EXCEL ONLY
@@ -321,7 +322,7 @@ if st.button("⬇️ Generate Excel"):
     st.download_button(
         "📥 Download Excel",
         data=output.getvalue(),
-        file_name="SOA_REPORT.xlsx"
+        file_name=f"{file_name_input}.xlsx"
     )
 
 # import streamlit as st
