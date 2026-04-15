@@ -445,7 +445,37 @@ if st.button("⬇️ Download All Broker"):
     
             for col in ['D','E','F','G']:
                 ws[f"{col}{row}"].number_format = '#,##0.00;[Red](#,##0.00)'
-    
+
+        # ======================
+        # AUTO WIDTH KOLOM
+        # ======================
+        def auto_adjust_column_width(ws):
+            for col in ws.columns:
+                max_length = 0
+                col_letter = col[0].column_letter
+        
+                for cell in col:
+                    try:
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                    except:
+                        pass
+        
+                adjusted_width = min(max_length + 2, 35)
+                ws.column_dimensions[col_letter].width = adjusted_width
+        
+        # jalankan auto width
+        auto_adjust_column_width(ws)
+        
+        # fix khusus kolom angka biar gak jadi #####
+        for col in ['D','E','F','G']:
+            ws.column_dimensions[col].width = 18
+        
+        # ======================
+        # SET PRINT BIAR SIAP PDF
+        # ======================
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = False
         # ======================
         # FOOTER (FINAL FIX)
         # ======================
