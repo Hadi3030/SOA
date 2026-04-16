@@ -196,15 +196,44 @@ file_name_input = st.text_input("Nama File Output", value="SOA_REPORT")
 def add_signature(ws, start_row, broker, date_text, nama, jabatan):
 
     # ======================
-    # KIRI (REINSURER)
+    # KIRI
     # ======================
     ws.merge_cells(start_row=start_row, start_column=1, end_row=start_row, end_column=3)
     ws.cell(row=start_row, column=1).value = "Agreed and Approved by Reinsurer"
-    
-    ws.merge_cells(start_row=start_row+2, start_column=1, end_row=start_row+2, end_column=3)
-    cell_broker = ws.cell(row=start_row+2, column=1)
+
+    # LANGSUNG DI BAWAH (tanpa lompat)
+    ws.merge_cells(start_row=start_row+1, start_column=1, end_row=start_row+1, end_column=3)
+    cell_broker = ws.cell(row=start_row+1, column=1)
     cell_broker.value = broker
     cell_broker.font = Font(bold=True)
+
+    # ======================
+    # KANAN
+    # ======================
+    for r in range(start_row, start_row+6):
+        ws.merge_cells(start_row=r, start_column=5, end_row=r, end_column=8)
+
+    # tanggal
+    ws.cell(row=start_row, column=5).value = date_text
+    ws.cell(row=start_row, column=5).alignment = Alignment(horizontal='center')
+
+    # company
+    ws.cell(row=start_row+1, column=5).value = "PT. Asuransi Kredit Indonesia"
+    ws.cell(row=start_row+1, column=5).font = Font(bold=True)
+    ws.cell(row=start_row+1, column=5).alignment = Alignment(horizontal='center')
+
+    # divisi
+    ws.cell(row=start_row+2, column=5).value = "Underwriting & Reinsurance Division"
+    ws.cell(row=start_row+2, column=5).alignment = Alignment(horizontal='center')
+
+    # nama
+    ws.cell(row=start_row+4, column=5).value = nama
+    ws.cell(row=start_row+4, column=5).font = Font(underline="single")
+    ws.cell(row=start_row+4, column=5).alignment = Alignment(horizontal='center')
+
+    # jabatan
+    ws.cell(row=start_row+5, column=5).value = jabatan
+    ws.cell(row=start_row+5, column=5).alignment = Alignment(horizontal='center')
 
     # ======================
     # KANAN (ASKRINDO)
@@ -238,7 +267,20 @@ def add_signature(ws, start_row, broker, date_text, nama, jabatan):
     cell = ws.cell(row=start_row+8, column=5)
     cell.value = jabatan
     cell.alignment = Alignment(horizontal='center')
-    
+
+grey_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+
+def style_total_rows(ws, start_row, end_row):
+    for r in range(start_row, end_row):
+        val_a = str(ws.cell(r,1).value)
+        val_b = str(ws.cell(r,2).value)
+
+        if "TOTAL" in val_a or "TOTAL" in val_b:
+            for c in range(1,9):
+                cell = ws.cell(r,c)
+                cell.fill = grey_fill
+                cell.font = Font(bold=True)
+                
 # ===============================
 # EXPORT EXCEL ONLY
 # ===============================
@@ -269,6 +311,19 @@ if st.button("⬇️ Generate Excel"):
     
             qs.to_excel(writer, sheet_name=sheet_name, startrow=12, index=False)
             ws = writer.sheets[sheet_name]
+            style_total_rows(ws, 14, 14 + len(qs))
+            # ===============================
+            # HEADER TABLE QS (HITAM)
+            # ===============================
+            header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            
+            header_row_qs = 13  # karena startrow=12 → header di baris 13
+            
+            for col in range(1, 9):
+                cell = ws.cell(row=header_row_qs, column=col)
+                cell.fill = header_fill
+                cell.font = Font(color="FFFFFF", bold=True)
+                cell.alignment = Alignment(horizontal="center")
 
             # ===============================
             # TITLE
@@ -308,7 +363,7 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             # TTD QS
             # ===============================
-            end_qs = 10 + len(qs) + 3
+            end_qs = 12 + len(qs) + 1   # 🔥 cuma 1 baris kosong
 
             add_signature(ws, end_qs, broker, ttd_date, ttd_name, ttd_jabatan)
 
@@ -354,9 +409,29 @@ if st.button("⬇️ Generate Excel"):
             ref_sp = build_ref(ref_counter, suffix)
             ref_counter += 1
             
-            sp_start = end_qs + 10
+            sp_start = end_qs + 15   # kasih ruang + page break
             sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start+8, index=False)
+            from openpyxl.worksheet.pagebreak import Break  # taruh di atas file (import)
+            header_row_sp = sp_start + 9
+            style_total_rows(ws, header_row_sp + 1, header_row_sp + 1 + len(sp))
+            # ===============================
+            # HEADER TABLE SP (HITAM)
+            # ===============================
+            header_row_sp = sp_start + 9  # karena startrow=sp_start+8
             
+            for col in range(1, 9):
+                cell = ws.cell(row=header_row_sp, column=col)
+                cell.fill = header_fill
+                cell.font = Font(color="FFFFFF", bold=True)
+                cell.alignment = Alignment(horizontal="center")
+            # ===============================
+            # SET A4 + PAGE BREAK
+            # ===============================
+            ws.page_setup.paperSize = ws.PAPERSIZE_A4
+            ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
+            
+            # page break sebelum SP dimulai
+            ws.row_breaks.append(Break(id=sp_start))
             # ===============================
             # TITLE SP (SAMA KAYAK QS)
             # ===============================
