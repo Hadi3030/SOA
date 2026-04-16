@@ -188,8 +188,57 @@ quarter_input = st.selectbox("Quarter", ["I","II","III","IV"])
 remarks_input = st.text_input("Remarks", value="-")
 
 ref_input = st.text_input("Ref No Awal (contoh: 83/UDWR/III/2025)")
+ttd_date = st.text_input("Tanggal TTD (contoh: Jakarta, 15 Januari 2026)")
+ttd_name = st.text_input("Nama Penandatangan")
+ttd_jabatan = st.text_input("Jabatan Penandatangan")
 file_name_input = st.text_input("Nama File Output", value="SOA_REPORT")
 
+def add_signature(ws, start_row, broker, date_text, nama, jabatan):
+
+    # ======================
+    # KIRI (REINSURER)
+    # ======================
+    ws.merge_cells(start_row=start_row, start_column=1, end_row=start_row, end_column=3)
+    ws.cell(row=start_row, column=1).value = "Agreed and Approved by Reinsurer"
+    
+    ws.merge_cells(start_row=start_row+2, start_column=1, end_row=start_row+2, end_column=3)
+    cell_broker = ws.cell(row=start_row+2, column=1)
+    cell_broker.value = broker
+    cell_broker.font = Font(bold=True)
+
+    # ======================
+    # KANAN (ASKRINDO)
+    # ======================
+    for r in range(start_row, start_row+10):
+        ws.merge_cells(start_row=r, start_column=5, end_row=r, end_column=8)
+
+    # Jakarta + tanggal
+    cell = ws.cell(row=start_row, column=5)
+    cell.value = date_text
+    cell.alignment = Alignment(horizontal='center')
+
+    # PT Askrindo
+    cell = ws.cell(row=start_row+2, column=5)
+    cell.value = "PT. Asuransi Kredit Indonesia"
+    cell.font = Font(bold=True)
+    cell.alignment = Alignment(horizontal='center')
+
+    # Divisi
+    cell = ws.cell(row=start_row+3, column=5)
+    cell.value = "Underwriting & Reinsurance Division"
+    cell.alignment = Alignment(horizontal='center')
+
+    # Nama (underline)
+    cell = ws.cell(row=start_row+7, column=5)
+    cell.value = nama
+    cell.font = Font(underline="single")
+    cell.alignment = Alignment(horizontal='center')
+
+    # Jabatan
+    cell = ws.cell(row=start_row+8, column=5)
+    cell.value = jabatan
+    cell.alignment = Alignment(horizontal='center')
+    
 # ===============================
 # EXPORT EXCEL ONLY
 # ===============================
@@ -261,9 +310,7 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             end_qs = 10 + len(qs) + 3
 
-            ws[f"E{end_qs}"] = "Jakarta"
-            ws[f"E{end_qs+2}"] = "PT. Asuransi Kredit Indonesia"
-            ws[f"E{end_qs+5}"] = "Authorized Signatory"
+            add_signature(ws, end_qs, broker, ttd_date, ttd_name, ttd_jabatan)
 
             # # ===============================
             # # TITLE
@@ -351,9 +398,7 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             end_sp = sp_start + len(sp) + 3
 
-            ws[f"E{end_sp}"] = "Jakarta"
-            ws[f"E{end_sp+2}"] = "PT. Asuransi Kredit Indonesia"
-            ws[f"E{end_sp+5}"] = "Authorized Signatory"
+            add_signature(ws, end_sp, broker, ttd_date, ttd_name, ttd_jabatan)
 
     st.download_button(
         "📥 Download Excel",
