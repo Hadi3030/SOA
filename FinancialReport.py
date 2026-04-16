@@ -102,6 +102,12 @@ year = int(df['YEAR'].mode()[0])
 
 months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
+def format_number(ws, start_row, end_row):
+    for row in ws.iter_rows(min_row=start_row, max_row=end_row, min_col=4, max_col=8):
+        for cell in row:
+            if cell.value is not None:
+                cell.number_format = '#,##0.00'
+
 # ===============================
 # GENERATE REPORT (ASLI KAMU)
 # ===============================
@@ -170,7 +176,7 @@ def parse_ref(ref):
     return 1, ""
 
 def build_ref(num, suffix):
-    return f"{num}{suffix}"
+    return f"{num:02d}{suffix}"
 
 # ===============================
 # INPUT USER
@@ -259,17 +265,17 @@ if st.button("⬇️ Generate Excel"):
             ws[f"E{end_qs+2}"] = "PT. Asuransi Kredit Indonesia"
             ws[f"E{end_qs+5}"] = "Authorized Signatory"
 
-            # ===============================
-            # TITLE
-            # ===============================
-            ws.merge_cells('A4:H4')
-            ws['A4'] = "STATEMENT OF ACCOUNT"
-            ws['A4'].font = Font(bold=True, size=14)
-            ws['A4'].alignment = Alignment(horizontal='center')
+            # # ===============================
+            # # TITLE
+            # # ===============================
+            # ws.merge_cells('A4:H4')
+            # ws['A4'] = "STATEMENT OF ACCOUNT"
+            # ws['A4'].font = Font(bold=True, size=14)
+            # ws['A4'].alignment = Alignment(horizontal='center')
             
-            ws.merge_cells('A5:H5')
-            ws['A5'] = f"Ref No. {ref_qs}"
-            ws['A5'].alignment = Alignment(horizontal='center')
+            # ws.merge_cells('A5:H5')
+            # ws['A5'] = f"Ref No. {ref_qs}"
+            # ws['A5'].alignment = Alignment(horizontal='center')
             
             # ===============================
             # HEADER INFO (RAPI SEJAJAR)
@@ -295,20 +301,50 @@ if st.button("⬇️ Generate Excel"):
                 ws[f"A{r}"].alignment = Alignment(horizontal="left")
                 ws[f"B{r}"].alignment = Alignment(horizontal="left")
 
-            # ===============================
-            # SP SECTION
-            # ===============================
+            # ======================
+            # SP REF
+            # ======================
+            ref_sp = build_ref(ref_counter, suffix)
+            ref_counter += 1
+            
             sp_start = end_qs + 10
-            sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start, index=False)
-
-            ws.merge_cells(f'A{sp_start-2}:H{sp_start-2}')
-            ws[f'A{sp_start-2}'] = "STATEMENT OF ACCOUNT - SURPLUS"
-            ws[f'A{sp_start-2}'].font = Font(bold=True, size=14)
-            ws[f'A{sp_start-2}'].alignment = Alignment(horizontal='center')
-
-            ws[f"A{sp_start-1}"] = "Treaty Year"; ws[f"B{sp_start-1}"] = year
-            ws[f"A{sp_start}"] = "For Months"; ws[f"B{sp_start}"] = months_text
-            ws[f"A{sp_start+1}"] = "Broker"; ws[f"B{sp_start+1}"] = broker
+            sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start+8, index=False)
+            
+            # ===============================
+            # TITLE SP (SAMA KAYAK QS)
+            # ===============================
+            ws.merge_cells(f'A{sp_start}:H{sp_start}')
+            ws[f'A{sp_start}'] = "STATEMENT OF ACCOUNT"
+            ws[f'A{sp_start}'].font = Font(bold=True, size=14)
+            ws[f'A{sp_start}'].alignment = Alignment(horizontal='center')
+            
+            ws.merge_cells(f'A{sp_start+1}:H{sp_start+1}')
+            ws[f'A{sp_start+1}'] = f"Ref No. {ref_sp}"
+            ws[f'A{sp_start+1}'].alignment = Alignment(horizontal='center')
+            
+            # ===============================
+            # HEADER INFO SP
+            # ===============================
+            contract_name_sp = "Surplus"
+            
+            headers_sp = [
+                ("Treaty Year", treaty_year_input),
+                ("Quarter", quarter_input),
+                ("Contract Name", contract_name_sp),
+                ("For Months", months_text),
+                ("Remarks", remarks_input),
+            ]
+            
+            start_row_sp = sp_start + 3
+            
+            for i, (label, value) in enumerate(headers_sp):
+                r = start_row_sp + i
+            
+                ws[f"A{r}"] = label
+                ws[f"B{r}"] = f": {value}"
+            
+                ws[f"A{r}"].alignment = Alignment(horizontal="left")
+                ws[f"B{r}"].alignment = Alignment(horizontal="left")
 
             # ===============================
             # TTD SP
