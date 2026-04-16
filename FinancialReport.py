@@ -235,39 +235,6 @@ def add_signature(ws, start_row, broker, date_text, nama, jabatan):
     ws.cell(row=start_row+5, column=5).value = jabatan
     ws.cell(row=start_row+5, column=5).alignment = Alignment(horizontal='center')
 
-    # ======================
-    # KANAN (ASKRINDO)
-    # ======================
-    for r in range(start_row, start_row+10):
-        ws.merge_cells(start_row=r, start_column=5, end_row=r, end_column=8)
-
-    # Jakarta + tanggal
-    cell = ws.cell(row=start_row, column=5)
-    cell.value = date_text
-    cell.alignment = Alignment(horizontal='center')
-
-    # PT Askrindo
-    cell = ws.cell(row=start_row+2, column=5)
-    cell.value = "PT. Asuransi Kredit Indonesia"
-    cell.font = Font(bold=True)
-    cell.alignment = Alignment(horizontal='center')
-
-    # Divisi
-    cell = ws.cell(row=start_row+3, column=5)
-    cell.value = "Underwriting & Reinsurance Division"
-    cell.alignment = Alignment(horizontal='center')
-
-    # Nama (underline)
-    cell = ws.cell(row=start_row+7, column=5)
-    cell.value = nama
-    cell.font = Font(underline="single")
-    cell.alignment = Alignment(horizontal='center')
-
-    # Jabatan
-    cell = ws.cell(row=start_row+8, column=5)
-    cell.value = jabatan
-    cell.alignment = Alignment(horizontal='center')
-
 grey_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
 
 def style_total_rows(ws, start_row, end_row):
@@ -363,7 +330,10 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             # TTD QS
             # ===============================
-            end_qs = 12 + len(qs) + 1   # 🔥 cuma 1 baris kosong
+            table_start_qs = 12
+            table_end_qs = table_start_qs + len(qs) + 1
+            
+            end_qs = table_end_qs + 1   # 1 baris kosong
 
             add_signature(ws, end_qs, broker, ttd_date, ttd_name, ttd_jabatan)
 
@@ -409,8 +379,13 @@ if st.button("⬇️ Generate Excel"):
             ref_sp = build_ref(ref_counter, suffix)
             ref_counter += 1
             
-            sp_start = end_qs + 15   # kasih ruang + page break
-            sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start+8, index=False)
+            sp_start = end_qs + 12   # cukup, karena ada TTD block   # kasih ruang + page break
+            #sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start+8, index=False)
+            table_start_sp = sp_start + 6
+            sp.to_excel(writer, sheet_name=sheet_name, startrow=table_start_sp, index=False)
+            # 🔥 HITUNG POSISI AKHIR TABEL (INI YANG KAMU TANYA)
+            table_end_sp = table_start_sp + len(sp) + 1
+            end_sp = table_end_sp + 1
             from openpyxl.worksheet.pagebreak import Break  # taruh di atas file (import)
             header_row_sp = sp_start + 9
             style_total_rows(ws, header_row_sp + 1, header_row_sp + 1 + len(sp))
@@ -471,8 +446,6 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             # TTD SP
             # ===============================
-            end_sp = sp_start + len(sp) + 3
-
             add_signature(ws, end_sp, broker, ttd_date, ttd_name, ttd_jabatan)
 
     st.download_button(
