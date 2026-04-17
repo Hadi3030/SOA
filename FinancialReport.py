@@ -50,8 +50,15 @@ def auto_column_width_table(ws, start_row, end_row, min_col=1, max_col=8):
             except:
                 pass
 
-        adjusted_width = min(max_length + 3, 40)
-        ws.column_dimensions[col_letter].width = adjusted_width
+        # =========================
+        # KHUSUS KOLOM ANGKA (D–H)
+        # =========================
+        if col >= 4:  
+            adjusted_width = max(max_length + 3, 20)  # MIN WIDTH 18 biar gak #####
+        else:
+            adjusted_width = max_length + 3
+
+        ws.column_dimensions[col_letter].width = min(adjusted_width, 40)
 # ===============================
 # NORMALISASI (ASLI)
 # ===============================
