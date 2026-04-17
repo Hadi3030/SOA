@@ -481,10 +481,7 @@ if st.button("⬇️ Generate Excel"):
             ws.print_area = f"A1:H{end_sp+5}"
             
             # page break sebelum SP dimulai
-            from openpyxl.worksheet.pagebreak import Break
-            
-            ws.row_breaks = []  # reset dulu biar bersih
-            ws.row_breaks.append(Break(id=sp_start))
+            ws.row_breaks.append(sp_start)
             # ===============================
             # TITLE SP (SAMA KAYAK QS)
             # ===============================
