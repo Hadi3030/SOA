@@ -479,7 +479,12 @@ if st.button("⬇️ Generate Excel"):
             ref_sp = build_ref(ref_counter, suffix)
             ref_counter += 1
             
-            sp_start = end_qs + 8   # lebih rapih & konsisten
+            # sp_start = end_qs + 8   # lebih rapih & konsisten
+            # setelah QS signature
+            signature_last_row = end_qs + 7   # karena jabatan ada di start_row+7
+            
+            # kasih jarak 5 baris kosong
+            sp_start = signature_last_row + 5
             # header info SP
             start_row_sp = sp_start + 3
             remarks_row_sp = start_row_sp + 4
