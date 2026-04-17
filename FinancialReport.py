@@ -107,7 +107,7 @@ def format_number(ws, start_row, end_row):
         for cell in row:
             if cell.value is not None:
                 # ✅ format Indonesia
-                cell.number_format = '#.##0,00;[Red](#.##0,00)'
+                cell.number_format = '#,##0.00;[Red](#,##0.00)'
 
 # ===============================
 # GENERATE REPORT (ASLI KAMU)
@@ -294,7 +294,7 @@ if st.button("⬇️ Generate Excel"):
     
             header_info_start = 7
             remarks_row = header_info_start + 4   # karena 5 header (0–4)
-            table_start_qs = remarks_row + 2      # 1 spasi setelah remarks
+            table_start_qs = remarks_row + 1      # 1 spasi setelah remarks
             
             qs.to_excel(writer, sheet_name=sheet_name, startrow=table_start_qs, index=False)           
             ws = writer.sheets[sheet_name]
@@ -407,7 +407,7 @@ if st.button("⬇️ Generate Excel"):
             start_row_sp = sp_start + 3
             remarks_row_sp = start_row_sp + 4
             
-            table_start_sp = remarks_row_sp + 2
+            table_start_sp = remarks_row_sp + 1
             
             sp.to_excel(writer, sheet_name=sheet_name, startrow=table_start_sp, index=False)
             # 🔥 HITUNG POSISI AKHIR TABEL (INI YANG KAMU TANYA)
