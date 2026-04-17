@@ -255,15 +255,33 @@ from openpyxl.styles import Side
 
 thin = Side(style='thin')
 
-def add_row_borders(ws, start_row, end_row):
+def add_total_borders(ws, start_row, end_row):
     for r in range(start_row, end_row + 1):
-        for c in range(1, 9):
-            cell = ws.cell(r, c)
-            cell.border = Border(
-                top=thin,
-                bottom=thin
-            )
-                
+
+        val_a = str(ws.cell(r, 1).value)
+        val_b = str(ws.cell(r, 2).value)
+
+        # =========================
+        # ✅ CURRENCY TOTAL (kolom A)
+        # =========================
+        if "TOTAL" in val_a:
+            for c in range(1, 9):
+                cell = ws.cell(r, c)
+                cell.border = Border(
+                    top=thin,
+                    bottom=thin
+                )
+
+        # =========================
+        # ✅ COB TOTAL (kolom B)
+        # =========================
+        elif "TOTAL" in val_b:
+            for c in range(2, 9):  # mulai dari kolom B
+                cell = ws.cell(r, c)
+                cell.border = Border(
+                    top=thin,
+                    bottom=thin
+                )
 # ===============================
 # EXPORT EXCEL ONLY
 # ===============================
@@ -312,7 +330,7 @@ if st.button("⬇️ Generate Excel"):
                 cell.font = Font(color="FFFFFF", bold=True)
                 cell.alignment = Alignment(horizontal="center")
 
-            add_row_borders(ws, header_row_qs, header_row_qs + len(qs))
+            add_total_borders(ws, header_row_qs + 1, header_row_qs + len(qs))
             format_number(ws, header_row_qs + 1, header_row_qs + len(qs))
 
             # ===============================
@@ -427,7 +445,7 @@ if st.button("⬇️ Generate Excel"):
                 cell.font = Font(color="FFFFFF", bold=True)
                 cell.alignment = Alignment(horizontal="center")
 
-            add_row_borders(ws, header_row_sp, header_row_sp + len(sp))
+            add_total_borders(ws, header_row_sp + 1, header_row_sp + len(sp))
             format_number(ws, header_row_sp + 1, header_row_sp + len(sp))
             # ===============================
             # SET A4 + PAGE BREAK
