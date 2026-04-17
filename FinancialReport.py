@@ -359,7 +359,11 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_qs + 1, header_row_qs + len(qs))
             format_number(ws, header_row_qs + 1, header_row_qs + len(qs))
-            auto_column_width(ws)
+            auto_column_width_table(
+                ws,
+                header_row_qs,                 # mulai dari header tabel
+                header_row_qs + len(qs)        # sampai akhir tabel
+            )
 
             # ===============================
             # TITLE
@@ -475,7 +479,11 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_sp + 1, header_row_sp + len(sp))
             format_number(ws, header_row_sp + 1, header_row_sp + len(sp))
-            auto_column_width(ws)
+            auto_column_width_table(
+                ws,
+                header_row_sp,
+                header_row_sp + len(sp)
+            )
             # ===============================
             # SET A4 + PAGE BREAK
             # ===============================
