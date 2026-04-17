@@ -132,6 +132,21 @@ year = int(df['YEAR'].mode()[0])
 
 months_text = f"{month_map[min_m]} - {month_map[max_m]} {year}"
 
+def align_table(ws, start_row, end_row):
+
+    # Currency (kolom A)
+    for row in range(start_row, end_row + 1):
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='center')
+
+    # UW Year (kolom C)
+    for row in range(start_row, end_row + 1):
+        ws.cell(row=row, column=3).alignment = Alignment(horizontal='center')
+
+    # Angka (D–H)
+    for row in range(start_row, end_row + 1):
+        for col in range(4, 9):
+            ws.cell(row=row, column=col).alignment = Alignment(horizontal='right')
+            
 def format_number(ws, start_row, end_row):
     for row in ws.iter_rows(min_row=start_row, max_row=end_row, min_col=4, max_col=8):
         for cell in row:
@@ -366,6 +381,11 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_qs + 1, header_row_qs + len(qs))
             format_number(ws, header_row_qs + 1, header_row_qs + len(qs))
+            align_table(
+                ws,
+                header_row_qs + 1,
+                header_row_qs + len(qs)
+            )
             auto_column_width_table(
                 ws,
                 header_row_qs,                 # mulai dari header tabel
@@ -486,6 +506,11 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_sp + 1, header_row_sp + len(sp))
             format_number(ws, header_row_sp + 1, header_row_sp + len(sp))
+            align_table(
+                ws,
+                header_row_sp + 1,
+                header_row_sp + len(sp)
+            )
             auto_column_width_table(
                 ws,
                 header_row_sp,
