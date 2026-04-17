@@ -37,23 +37,21 @@ if file.name.endswith(".xlsb"):
 else:
     df = pd.read_excel(file, sheet_name=sheet)
 
-def auto_column_width(ws):
-    for col in ws.columns:
+def auto_column_width_table(ws, start_row, end_row, min_col=1, max_col=8):
+    for col in range(min_col, max_col + 1):
         max_length = 0
-        col_letter = col[0].column_letter
+        col_letter = ws.cell(row=1, column=col).column_letter
 
-        for cell in col:
+        for row in range(start_row, end_row + 1):
+            cell = ws.cell(row=row, column=col)
             try:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
             except:
                 pass
 
-        # adjusted_width = min(max_length + 2, 25)
-        # ws.column_dimensions[col_letter].width = adjusted_width
-         # 🔥 PERBAIKAN DI SINI
-        adjusted_width = max_length + 3   # kasih padding
-        ws.column_dimensions[col_letter].width = min(adjusted_width, 50) 
+        adjusted_width = min(max_length + 3, 40)
+        ws.column_dimensions[col_letter].width = adjusted_width
 # ===============================
 # NORMALISASI (ASLI)
 # ===============================
