@@ -36,11 +36,6 @@ if file.name.endswith(".xlsb"):
     df = pd.read_excel(file, sheet_name=sheet, engine="pyxlsb")
 else:
     df = pd.read_excel(file, sheet_name=sheet)
-required_cols = ['broker','cob','uy']
-
-if not all(col in df.columns.str.lower() for col in required_cols):
-    st.error("Please select the correct sheet.")
-    st.stop()
 
 def auto_column_width(ws):
     for col in ws.columns:
@@ -76,6 +71,14 @@ mapping = {
 }
 df = df.rename(columns=mapping)
 
+# ✅ VALIDASI SETELAH RENAME
+required_cols = ['BROKER','COB','UY']
+
+missing_cols = [col for col in required_cols if col not in df.columns]
+
+if missing_cols:
+    st.error(f"Please select the correct sheet. Missing columns: {', '.join(missing_cols)}")
+    st.stop()
 # ===============================
 # FILTER UI (STYLE BARU)
 # ===============================
