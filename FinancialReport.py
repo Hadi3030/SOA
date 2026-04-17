@@ -37,6 +37,20 @@ if file.name.endswith(".xlsb"):
 else:
     df = pd.read_excel(file, sheet_name=sheet)
 
+def auto_column_width(ws):
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+
+        for cell in col:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+
+        adjusted_width = min(max_length + 2, 25)
+        ws.column_dimensions[col_letter].width = adjusted_width
 # ===============================
 # NORMALISASI (ASLI)
 # ===============================
@@ -227,15 +241,15 @@ def add_signature(ws, start_row, broker, date_text, nama, jabatan):
     ws.cell(row=start_row+2, column=5).value = "Underwriting & Reinsurance Division"
     ws.cell(row=start_row+2, column=5).alignment = Alignment(horizontal='center')
 
-    # nama
-    ws.cell(row=start_row+4, column=5).value = nama
-    ws.cell(row=start_row+4, column=5).font = Font(underline="single")
-    ws.cell(row=start_row+4, column=5).alignment = Alignment(horizontal='center')
-
-    # jabatan
-    ws.cell(row=start_row+5, column=5).value = jabatan
-    ws.cell(row=start_row+5, column=5).alignment = Alignment(horizontal='center')
-
+        # nama (turun 2 baris)
+    ws.cell(row=start_row+6, column=5).value = nama
+    ws.cell(row=start_row+6, column=5).font = Font(underline="single")
+    ws.cell(row=start_row+6, column=5).alignment = Alignment(horizontal='center')
+    
+    # jabatan (turun 2 baris)
+    ws.cell(row=start_row+7, column=5).value = jabatan
+    ws.cell(row=start_row+7, column=5).alignment = Alignment(horizontal='center')
+    
 grey_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
 
 def style_total_rows(ws, start_row, end_row):
@@ -320,7 +334,7 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             # HEADER TABLE QS (HITAM)
             # ===============================
-            header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            header_fill = PatternFill(start_color="FF000000", end_color="FF000000", fill_type="solid")
             
             header_row_qs = table_start_qs + 1 # karena startrow=12 → header di baris 13
             
@@ -332,6 +346,7 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_qs + 1, header_row_qs + len(qs))
             format_number(ws, header_row_qs + 1, header_row_qs + len(qs))
+            auto_column_width(ws)
 
             # ===============================
             # TITLE
@@ -447,13 +462,28 @@ if st.button("⬇️ Generate Excel"):
 
             add_total_borders(ws, header_row_sp + 1, header_row_sp + len(sp))
             format_number(ws, header_row_sp + 1, header_row_sp + len(sp))
+            auto_column_width(ws)
             # ===============================
             # SET A4 + PAGE BREAK
             # ===============================
             ws.page_setup.paperSize = ws.PAPERSIZE_A4
             ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
+            # ===============================
+            # PRINT SETTING A4 FIX
+            # ===============================
+            ws.page_setup.fitToWidth = 1
+            ws.page_setup.fitToHeight = False
+            
+            # repeat header tiap page (biar rapi kalau panjang)
+            ws.print_title_rows = f"{header_row_qs}:{header_row_qs}"
+            
+            # set print area full (biar gak kepotong)
+            ws.print_area = f"A1:H{end_sp+5}"
             
             # page break sebelum SP dimulai
+            from openpyxl.worksheet.pagebreak import Break
+            
+            ws.row_breaks = []  # reset dulu biar bersih
             ws.row_breaks.append(Break(id=sp_start))
             # ===============================
             # TITLE SP (SAMA KAYAK QS)
