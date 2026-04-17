@@ -106,7 +106,8 @@ def format_number(ws, start_row, end_row):
     for row in ws.iter_rows(min_row=start_row, max_row=end_row, min_col=4, max_col=8):
         for cell in row:
             if cell.value is not None:
-                cell.number_format = '#,##0.00'
+                # ✅ format Indonesia
+                cell.number_format = '#.##0,00;[Red](#.##0,00)'
 
 # ===============================
 # GENERATE REPORT (ASLI KAMU)
@@ -240,13 +241,28 @@ grey_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="sol
 def style_total_rows(ws, start_row, end_row):
     for r in range(start_row, end_row):
         val_a = str(ws.cell(r,1).value)
-        val_b = str(ws.cell(r,2).value)
 
-        if "TOTAL" in val_a or "TOTAL" in val_b:
+        # ✅ HANYA currency total (kolom A)
+        if "TOTAL" in val_a:
             for c in range(1,9):
                 cell = ws.cell(r,c)
                 cell.fill = grey_fill
                 cell.font = Font(bold=True)
+
+        # ❌ COB TOTAL → jangan bold
+
+from openpyxl.styles import Side
+
+thin = Side(style='thin')
+
+def add_row_borders(ws, start_row, end_row):
+    for r in range(start_row, end_row + 1):
+        for c in range(1, 9):
+            cell = ws.cell(r, c)
+            cell.border = Border(
+                top=thin,
+                bottom=thin
+            )
                 
 # ===============================
 # EXPORT EXCEL ONLY
@@ -276,7 +292,11 @@ if st.button("⬇️ Generate Excel"):
             ref_qs = build_ref(ref_counter, suffix)
             ref_counter += 1
     
-            qs.to_excel(writer, sheet_name=sheet_name, startrow=12, index=False)
+            header_info_start = 7
+            remarks_row = header_info_start + 4   # karena 5 header (0–4)
+            table_start_qs = remarks_row + 2      # 1 spasi setelah remarks
+            
+            qs.to_excel(writer, sheet_name=sheet_name, startrow=table_start_qs, index=False)           
             ws = writer.sheets[sheet_name]
             style_total_rows(ws, 14, 14 + len(qs))
             # ===============================
@@ -284,13 +304,16 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
             
-            header_row_qs = 13  # karena startrow=12 → header di baris 13
+            header_row_qs = table_start_qs + 1 # karena startrow=12 → header di baris 13
             
             for col in range(1, 9):
                 cell = ws.cell(row=header_row_qs, column=col)
                 cell.fill = header_fill
                 cell.font = Font(color="FFFFFF", bold=True)
                 cell.alignment = Alignment(horizontal="center")
+
+            add_row_borders(ws, header_row_qs, header_row_qs + len(qs))
+            format_number(ws, header_row_qs + 1, header_row_qs + len(qs))
 
             # ===============================
             # TITLE
@@ -330,7 +353,7 @@ if st.button("⬇️ Generate Excel"):
             # ===============================
             # TTD QS
             # ===============================
-            table_start_qs = 12
+            # table_start_qs = 12
             table_end_qs = table_start_qs + len(qs) + 1
             
             end_qs = table_end_qs + 1   # 1 baris kosong
@@ -379,26 +402,33 @@ if st.button("⬇️ Generate Excel"):
             ref_sp = build_ref(ref_counter, suffix)
             ref_counter += 1
             
-            sp_start = end_qs + 12   # cukup, karena ada TTD block   # kasih ruang + page break
-            #sp.to_excel(writer, sheet_name=sheet_name, startrow=sp_start+8, index=False)
-            table_start_sp = sp_start + 6
+            sp_start = end_qs + 6   # lebih rapih & konsisten
+            # header info SP
+            start_row_sp = sp_start + 3
+            remarks_row_sp = start_row_sp + 4
+            
+            table_start_sp = remarks_row_sp + 2
+            
             sp.to_excel(writer, sheet_name=sheet_name, startrow=table_start_sp, index=False)
             # 🔥 HITUNG POSISI AKHIR TABEL (INI YANG KAMU TANYA)
             table_end_sp = table_start_sp + len(sp) + 1
             end_sp = table_end_sp + 1
             from openpyxl.worksheet.pagebreak import Break  # taruh di atas file (import)
-            header_row_sp = sp_start + 9
+            header_row_sp = table_start_sp + 1
             style_total_rows(ws, header_row_sp + 1, header_row_sp + 1 + len(sp))
             # ===============================
             # HEADER TABLE SP (HITAM)
             # ===============================
-            header_row_sp = sp_start + 9  # karena startrow=sp_start+8
+     # karena startrow=sp_start+8
             
             for col in range(1, 9):
                 cell = ws.cell(row=header_row_sp, column=col)
                 cell.fill = header_fill
                 cell.font = Font(color="FFFFFF", bold=True)
                 cell.alignment = Alignment(horizontal="center")
+
+            add_row_borders(ws, header_row_sp, header_row_sp + len(sp))
+            format_number(ws, header_row_sp + 1, header_row_sp + len(sp))
             # ===============================
             # SET A4 + PAGE BREAK
             # ===============================
