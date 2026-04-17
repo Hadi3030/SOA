@@ -49,8 +49,11 @@ def auto_column_width(ws):
             except:
                 pass
 
-        adjusted_width = min(max_length + 2, 25)
-        ws.column_dimensions[col_letter].width = adjusted_width
+        # adjusted_width = min(max_length + 2, 25)
+        # ws.column_dimensions[col_letter].width = adjusted_width
+         # 🔥 PERBAIKAN DI SINI
+        adjusted_width = max_length + 3   # kasih padding
+        ws.column_dimensions[col_letter].width = min(adjusted_width, 50) 
 # ===============================
 # NORMALISASI (ASLI)
 # ===============================
