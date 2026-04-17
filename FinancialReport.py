@@ -36,6 +36,11 @@ if file.name.endswith(".xlsb"):
     df = pd.read_excel(file, sheet_name=sheet, engine="pyxlsb")
 else:
     df = pd.read_excel(file, sheet_name=sheet)
+required_cols = ['broker','cob','uy']
+
+if not all(col in df.columns.str.lower() for col in required_cols):
+    st.error("Please select the correct sheet.")
+    st.stop()
 
 def auto_column_width(ws):
     for col in ws.columns:
@@ -200,6 +205,10 @@ st.subheader("Header Info")
 
 treaty_year_input = st.text_input("Treaty Year", value=str(year))
 quarter_input = st.selectbox("Quarter", ["I","II","III","IV"])
+months_input = st.text_input(
+    "For Months (contoh: October 2025 - December 2025)",
+    value=months_text
+)
 remarks_input = st.text_input("Remarks", value="-")
 
 ref_input = st.text_input("Ref No Awal (contoh: 83/UDWR/III/2025)")
@@ -369,7 +378,7 @@ if st.button("⬇️ Generate Excel"):
                 ("Treaty Year", treaty_year_input),
                 ("Quarter", quarter_input),
                 ("Contract Name", contract_name_qs),
-                ("For Months", months_text),
+                ("For Months", months_input),
                 ("Remarks", remarks_input),
             ]
             
@@ -414,7 +423,7 @@ if st.button("⬇️ Generate Excel"):
                 ("Treaty Year", treaty_year_input),
                 ("Quarter", quarter_input),
                 ("Contract Name", contract_name_qs),
-                ("For Months", months_text),
+                ("For Months", months_input),
                 ("Remarks", remarks_input),
             ]
             
@@ -504,7 +513,7 @@ if st.button("⬇️ Generate Excel"):
                 ("Treaty Year", treaty_year_input),
                 ("Quarter", quarter_input),
                 ("Contract Name", contract_name_sp),
-                ("For Months", months_text),
+                ("For Months", months_input),
                 ("Remarks", remarks_input),
             ]
             
