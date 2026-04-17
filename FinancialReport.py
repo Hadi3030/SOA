@@ -389,7 +389,7 @@ if st.button("⬇️ Generate Excel"):
             # table_start_qs = 12
             table_end_qs = table_start_qs + len(qs) + 1
             
-            end_qs = table_end_qs + 3   # 1 baris kosong
+            end_qs = table_end_qs + 1   # 1 baris kosong
 
             add_signature(ws, end_qs, broker, ttd_date, ttd_name, ttd_jabatan)
 
