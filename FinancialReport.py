@@ -225,7 +225,7 @@ def add_signature(ws, start_row, broker, date_text, nama, jabatan):
     # ======================
     # KANAN
     # ======================
-    for r in range(start_row, start_row+6):
+    for r in range(start_row, start_row+8):
         ws.merge_cells(start_row=r, start_column=5, end_row=r, end_column=8)
 
     # tanggal
@@ -389,7 +389,7 @@ if st.button("⬇️ Generate Excel"):
             # table_start_qs = 12
             table_end_qs = table_start_qs + len(qs) + 1
             
-            end_qs = table_end_qs + 1   # 1 baris kosong
+            end_qs = table_end_qs + 3   # 1 baris kosong
 
             add_signature(ws, end_qs, broker, ttd_date, ttd_name, ttd_jabatan)
 
@@ -435,7 +435,7 @@ if st.button("⬇️ Generate Excel"):
             ref_sp = build_ref(ref_counter, suffix)
             ref_counter += 1
             
-            sp_start = end_qs + 6   # lebih rapih & konsisten
+            sp_start = end_qs + 8   # lebih rapih & konsisten
             # header info SP
             start_row_sp = sp_start + 3
             remarks_row_sp = start_row_sp + 4
@@ -481,7 +481,8 @@ if st.button("⬇️ Generate Excel"):
             ws.print_area = f"A1:H{end_sp+5}"
             
             # page break sebelum SP dimulai
-            ws.row_breaks.append(sp_start)
+            from openpyxl.worksheet.pagebreak import Break
+            ws.row_breaks.append(Break(id=sp_start))
             # ===============================
             # TITLE SP (SAMA KAYAK QS)
             # ===============================
